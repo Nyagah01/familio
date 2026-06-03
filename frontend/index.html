@@ -577,13 +577,24 @@ function logVibe(level, note) {
   localStorage.setItem('familio_vibes', JSON.stringify(vibeLogs));
   renderVibesLog();
 }
+function cleanVibeData() {
+  // Fix any legacy entries with wrong who field
+  var changed = false;
+  vibeLogs = vibeLogs.map(function(e) {
+    if (!e.who || e.who === '') { e.who = 'nyagah'; changed = true; }
+    return e;
+  });
+  if (changed) localStorage.setItem('familio_vibes', JSON.stringify(vibeLogs));
+}
+
 function renderVibesLog() {
+  cleanVibeData();
   var log = document.getElementById('vibesLog');
   if (!vibeLogs.length) { log.innerHTML=''; return; }
   var html = '<div class="vibes-log-title">Recent check-ins</div>';
   vibeLogs.slice(0,4).forEach(function(e) {
     var uName = e.who==='nyagah'?'Nyagah':'Mum';
-    var isMe = e.who === CURRENT_USER;
+    var isMe = CURRENT_USER && e.who === CURRENT_USER;
     var other = e.who==='nyagah'?'Mum':'Nyagah';
     var timeStr = new Date(e.time).toLocaleDateString('en-KE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     var moodLabel = isMe ? 'You are feeling '+e.label.toLowerCase() : uName+' is '+e.label.toLowerCase();
@@ -592,8 +603,9 @@ function renderVibesLog() {
     if (e.low && isMe) {
       html += '<div class="vibe-nudge">We have let '+other+' know how you are feeling.</div>';
     } else if (e.low && !isMe) {
-      html += '<div class="vibe-nudge">'+uName+' might need a check-in.<button class="vibe-nudge-btn" onclick="alert(\'Open WhatsApp and check in!\')">Check in with '+uName+'</button></div>';
+      html += '<div class="vibe-nudge">'+uName+' might need a check-in. <button class="vibe-nudge-btn" onclick="alert(\'Open WhatsApp and check in!\')">Check in with '+uName+'</button></div>';
     }
+    // never show nudge if viewing your own entry
     html += '</div></div>';
   });
   log.innerHTML = html;
