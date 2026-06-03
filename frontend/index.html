@@ -245,6 +245,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
   <button class="filter-btn" id="filter-pending" onclick="setFilter('pending')">Pending</button>
   <button class="filter-btn" id="filter-in_progress" onclick="setFilter('in_progress')">In progress</button>
   <button class="filter-btn" id="filter-done" onclick="setFilter('done')">Done</button>
+  <button class="filter-btn" onclick="clearCompleted()" style="color:#E05A4A;border-color:rgba(224,90,74,0.3);">Clear done</button>
 </div>
 
 <div class="task-list" id="taskList">
@@ -252,7 +253,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 </div>
 
 <div class="vibes-section">
-  <div class="vibes-title">How are you feeling today?</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <div class="vibes-title">How are you feeling today?</div>
+    <button onclick="clearVibes()" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:underline;">Clear</button>
+  </div>
   <div class="vibes-sub" id="vibesSub">Tap your mood.</div>
   <div class="vibes-grid">
     <button class="vibe-btn" id="vibe-1" onclick="tapVibe(1)"><span class="vibe-emoji">🌟</span><span class="vibe-label">Thriving</span></button>
@@ -571,6 +575,13 @@ function tapVibe(level) {
 }
 function skipVibeNote() { document.getElementById('vibeNoteModal').classList.remove('show'); if (pendingVibeLevel) { logVibe(pendingVibeLevel, ''); pendingVibeLevel = null; } }
 function saveVibeNote() { var note = document.getElementById('vibeNoteInput').value.trim(); document.getElementById('vibeNoteModal').classList.remove('show'); if (pendingVibeLevel) { logVibe(pendingVibeLevel, note); pendingVibeLevel = null; } }
+function clearVibes() {
+  vibeLogs = [];
+  localStorage.removeItem('familio_vibes');
+  for (var i=1;i<=5;i++) document.getElementById('vibe-'+i).className = 'vibe-btn';
+  renderVibesLog();
+}
+
 function logVibe(level, note) {
   vibeLogs.unshift({level:level,label:VIBES[level].label,emoji:VIBES[level].emoji,color:VIBES[level].color,low:VIBES[level].low,note:note,who:CURRENT_USER||'nyagah',time:new Date().toISOString()});
   if (vibeLogs.length > 20) vibeLogs = vibeLogs.slice(0,20);
@@ -603,7 +614,10 @@ function renderVibesLog() {
     if (e.low && isMe) {
       html += '<div class="vibe-nudge">We have let '+other+' know how you are feeling.</div>';
     } else if (e.low && !isMe) {
-      html += '<div class="vibe-nudge">'+uName+' might need a check-in. <button class="vibe-nudge-btn" onclick="alert(\'Open WhatsApp and check in!\')">Check in with '+uName+'</button></div>';
+      var theirNumber = (e.who==='nyagah') ? '254740116371' : '254720666029';
+      var waMsg = encodeURIComponent('Hey dear, just checking in on you. I noticed you logged that you are feeling ' + e.label.toLowerCase() + '. What is going on?');
+      var waUrl = 'https://wa.me/' + theirNumber + '?text=' + waMsg;
+      html += '<div class="vibe-nudge">'+uName+' might need a check-in. <button class="vibe-nudge-btn" onclick="window.open(\''+waUrl+'\',\'_blank\')">Check in with '+uName+'</button></div>';
     }
     // never show nudge if viewing your own entry
     html += '</div></div>';
@@ -748,6 +762,15 @@ async function changeStatus(id, status) {
 }
 
 async function deleteTask(id) { await fetch(API+'/tasks/'+id,{method:'DELETE'}); await fetchTasks(); }
+
+async function clearCompleted() {
+  var doneTasks = tasks.filter(function(t){ return t.status==='done' && t.owner_id===MY_ID; });
+  if (!doneTasks.length) return;
+  for (var i=0;i<doneTasks.length;i++) {
+    try { await fetch(API+'/tasks/'+doneTasks[i].id,{method:'DELETE'}); } catch(e){}
+  }
+  await fetchTasks();
+}
 
 async function addTask() {
   var title=document.getElementById('newTitle').value.trim();
