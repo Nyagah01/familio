@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Familio</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{--bg:#0F0E0C;--surface:#1A1916;--surface2:#242220;--border:#2E2C29;--border2:#3A3834;--ink:#F0EDE8;--ink2:#A09C96;--ink3:#6B6864;--accent:#C8873A;--accent-light:rgba(200,135,58,0.15);--green:#3D8B6B;--green-light:rgba(61,139,107,0.15);--red:#C0392B;--red-light:rgba(192,57,43,0.15);--blue:#4A7FC0;--blue-light:rgba(74,127,192,0.15);--amber-light:rgba(186,117,23,0.2);--r:10px;--r-lg:16px;}
+body.light{--bg:#F7F4EF;--surface:#FFFFFF;--surface2:#F0EDE8;--border:#E8E4DD;--border2:#D8D4CC;--ink:#0F0E0C;--ink2:#4A4740;--ink3:#908D88;--accent-light:rgba(200,135,58,0.1);--green:#2D6A4F;--green-light:rgba(45,106,79,0.1);--red:#C0392B;--red-light:rgba(192,57,43,0.1);--blue:#1B4F8A;--blue-light:rgba(27,79,138,0.1);--amber-light:rgba(186,117,23,0.1);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-width:480px;margin:0 auto;font-size:14px;min-height:100vh;padding-bottom:40px;}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:24px 20px 20px;}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.wordmark{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--ink);line-height:1;}
+.wordmark span{color:var(--accent);}
+.leader-badge{display:flex;align-items:center;gap:6px;background:var(--accent-light);border:1px solid rgba(200,135,58,0.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;color:var(--accent);}
+.leader-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+.theme-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--ink2);display:flex;align-items:center;}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.score-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;}
+.score-card-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;}
+.avatar-n{background:var(--accent);}
+.avatar-m{background:var(--green);}
+.score-name{font-size:13px;font-weight:500;color:var(--ink);}
+.score-meta{font-size:10px;color:var(--ink3);}
+.score-nums{display:flex;gap:8px;}
+.score-num{flex:1;text-align:center;}
+.score-num .val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--ink);}
+.score-num .lbl{font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;}
+.tab{flex:1;padding:12px 4px;border:none;background:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:5px;transition:all 0.15s;}
+.tab.active{color:var(--ink);border-bottom-color:var(--accent);}
+.tab-count{font-size:10px;background:var(--surface2);color:var(--ink3);padding:1px 6px;border-radius:20px;}
+.tab.active .tab-count{background:var(--accent);color:#fff;}
+.add-bar{padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);}
+.add-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.filter-bar{display:flex;gap:6px;padding:12px 20px 4px;overflow-x:auto;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-btn{flex-shrink:0;padding:5px 12px;border:1px solid var(--border2);border-radius:20px;background:none;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap;}
+.filter-btn.active{background:var(--accent);border-color:transparent;color:#fff;}
+.task-list{padding:8px 20px 16px;display:flex;flex-direction:column;gap:8px;}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;}
+.task-card.done{opacity:0.55;}
+.task-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.task-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--ink);line-height:1.3;}
+.task-title.strikethrough{text-decoration:line-through;color:var(--ink3);}
+.task-title.blurred{filter:blur(5px);user-select:none;}
+.task-desc{font-size:12px;color:var(--ink2);margin-bottom:8px;line-height:1.5;}
+.task-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.task-left{display:flex;align-items:center;gap:6px;}
+.task-right{display:flex;align-items:center;gap:8px;}
+.chip{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;border:1px solid transparent;}
+.chip-pending{background:var(--amber-light);color:#E8A020;border-color:rgba(232,160,32,0.3);}
+.chip-in_progress{background:var(--blue-light);color:var(--blue);border-color:rgba(74,127,192,0.3);}
+.chip-done{background:var(--green-light);color:var(--green);border-color:rgba(61,139,107,0.3);}
+.chip-high{background:var(--red-light);color:#E05A4A;}
+.chip-medium{background:var(--accent-light);color:var(--accent);}
+.chip-low{background:var(--surface2);color:var(--ink3);}
+.chip-private{background:var(--blue-light);color:var(--blue);}
+.due-text{font-size:11px;color:var(--ink3);}
+.due-text.overdue{color:#E05A4A;font-weight:500;}
+.pts-text{font-size:11px;font-weight:600;color:var(--accent);}
+.status-select{font-size:11px;border:1px solid var(--border2);border-radius:6px;padding:3px 6px;color:var(--ink);background:var(--surface2);cursor:pointer;font-family:'Inter',sans-serif;}
+.delete-btn{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:0;line-height:1;flex-shrink:0;}
+.research-preview{margin-top:8px;background:var(--green-light);border:1px solid rgba(61,139,107,0.3);border-radius:var(--r);padding:8px 12px;}
+.research-preview-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:4px;}
+.research-preview-text{font-size:11px;color:var(--green);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.research-see-more{font-size:11px;color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;padding:3px 0 0;font-family:'Inter',sans-serif;display:block;}
+.research-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;margin-top:8px;font-family:'Inter',sans-serif;}
+.research-btn:disabled{opacity:0.4;cursor:default;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--ink3);}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+
+/* VIBES SECTION */
+.vibes-section{margin:12px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;}
+.vibes-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.vibes-sub{font-size:11px;color:var(--ink3);margin-bottom:14px;}
+.vibes-grid{display:flex;gap:8px;justify-content:space-between;}
+.vibe-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--surface2);cursor:pointer;transition:all 0.15s;}
+.vibe-emoji{font-size:22px;line-height:1;}
+.vibe-label{font-size:9px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.04em;}
+.vibe-btn:hover{border-color:var(--border2);transform:scale(1.04);}
+.vibe-btn.sel{border-width:2px;}
+.vibe-1.sel{border-color:#2D6A4F;background:rgba(45,106,79,0.15);}
+.vibe-2.sel{border-color:#639922;background:rgba(99,153,34,0.15);}
+.vibe-3.sel{border-color:#BA7517;background:rgba(186,117,23,0.15);}
+.vibe-4.sel{border-color:#D85A30;background:rgba(216,90,48,0.15);}
+.vibe-5.sel{border-color:#A32D2D;background:rgba(163,45,45,0.15);}
+.vibes-log{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.vibes-log-title{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;}
+.vibe-entry{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;}
+.vibe-entry-emoji{font-size:16px;}
+.vibe-entry-info{flex:1;}
+.vibe-entry-mood{font-size:12px;font-weight:600;}
+.vibe-entry-time{font-size:10px;color:var(--ink3);}
+.vibe-entry-note{font-size:11px;color:var(--ink2);font-style:italic;margin-top:2px;}
+.vibe-nudge{font-size:11px;color:#E8A020;margin-top:4px;}
+.vibe-nudge-btn{font-size:11px;font-weight:600;color:var(--accent);background:none;border:1px solid rgba(200,135,58,0.4);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'Inter',sans-serif;margin-left:6px;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);align-items:flex-end;z-index:100;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border);padding:24px 20px 32px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--ink);}
+.modal-close{background:var(--surface2);border:1px solid var(--border);width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--ink2);display:flex;align-items:center;justify-content:center;}
+.form-field{margin-bottom:12px;}
+.form-label{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:5px;}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);background:var(--surface2);outline:none;}
+.form-textarea{resize:none;height:64px;}
+.form-row{display:flex;gap:10px;}
+.form-row .form-field{flex:1;}
+.private-toggle{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;margin-bottom:12px;}
+.private-toggle-left{display:flex;align-items:center;gap:10px;}
+.toggle-title{font-size:13px;font-weight:500;color:var(--ink);}
+.toggle-sub{font-size:11px;color:var(--ink3);}
+.pill{width:38px;height:20px;background:var(--border2);border-radius:10px;position:relative;transition:background 0.2s;}
+.pill.on{background:var(--green);}
+.pill-thumb{width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left 0.2s;}
+.pill.on .pill-thumb{left:20px;}
+.submit-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.submit-btn:disabled{opacity:0.5;cursor:default;}
+.research-full{font-size:13px;color:var(--ink2);line-height:1.8;}
+.note-prompt{font-size:13px;color:var(--ink2);margin-bottom:12px;line-height:1.6;font-style:italic;}
+.note-textarea{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);background:var(--surface2);outline:none;resize:none;height:80px;margin-bottom:12px;}
+.note-actions{display:flex;gap:10px;}
+.note-skip{flex:1;padding:11px;border:1px solid var(--border2);border-radius:var(--r);background:none;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink3);cursor:pointer;}
+.note-save{flex:2;padding:11px;border:none;border-radius:var(--r);background:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;}
+
+
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+.login-wordmark{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--ink);margin-bottom:8px;}
+.login-wordmark span{color:var(--accent);}
+.login-sub{font-size:13px;color:var(--ink3);margin-bottom:40px;}
+.login-users{display:flex;gap:14px;margin-bottom:32px;width:100%;}
+.login-user{flex:1;padding:20px 12px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r-lg);cursor:pointer;text-align:center;transition:all 0.15s;}
+.login-user.selected{border-color:var(--accent);background:var(--accent-light);}
+.login-user-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:#fff;margin:0 auto 10px;}
+.login-user-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);}
+.login-pin-section{width:100%;}
+.login-pin-label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;text-align:center;}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:24px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--border2);transition:background 0.15s;}
+.pin-dot.filled{background:var(--accent);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pin-key{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--ink);cursor:pointer;text-align:center;transition:all 0.1s;}
+.pin-key:active{background:var(--surface2);transform:scale(0.96);}
+.pin-key.wide{grid-column:span 1;}
+.login-error{font-size:12px;color:#E05A4A;text-align:center;margin-top:12px;min-height:18px;}
+.logout-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;color:var(--ink2);cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px;}
+
+@keyframes float {
+  0%,100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes glow {
+  0%,100% { box-shadow: 0 0 8px rgba(200,135,58,0.2), 0 0 16px rgba(200,135,58,0.1); }
+  50% { box-shadow: 0 0 16px rgba(200,135,58,0.45), 0 0 32px rgba(200,135,58,0.2); }
+}
+.vibes-section {
+  animation: float 4s ease-in-out infinite, glow 4s ease-in-out infinite;
+}
+
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.spin{animation:spin 0.8s linear infinite;display:inline-block;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="wordmark">Fami<span>lio</span></div>
+    <div class="header-right">
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"><i class="ti ti-sun" style="font-size:13px"></i></button><button class="logout-btn" id="logoutBtn" onclick="logout()" style="display:none"><i class="ti ti-logout" style="font-size:12px"></i> <span id="currentUserLabel"></span></button>
+      <div class="leader-badge"><i class="ti ti-trophy" style="font-size:12px"></i><span id="leaderName">Loading...</span></div>
+    </div>
+  </div>
+  <div class="scores">
+    <div class="score-card">
+      <div class="score-card-top"><div class="avatar avatar-n">N</div><div><div class="score-name">Nyagah</div><div class="score-meta" id="metaN">0 tasks</div></div></div>
+      <div class="score-nums">
+        <div class="score-num"><div class="val" id="ptsN">0</div><div class="lbl">pts</div></div>
+        <div class="score-num"><div class="val" id="doneN">0</div><div class="lbl">done</div></div>
+        <div class="score-num"><div class="val" id="leftN">0</div><div class="lbl">left</div></div>
+      </div>
+    </div>
+    <div class="score-card">
+      <div class="score-card-top"><div class="avatar avatar-m">M</div><div><div class="score-name">Mum</div><div class="score-meta" id="metaM">0 tasks</div></div></div>
+      <div class="score-nums">
+        <div class="score-num"><div class="val" id="ptsM">0</div><div class="lbl">pts</div></div>
+        <div class="score-num"><div class="val" id="doneM">0</div><div class="lbl">done</div></div>
+        <div class="score-num"><div class="val" id="leftM">0</div><div class="lbl">left</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-shared" onclick="setSpace('shared')">Shared <span class="tab-count" id="cnt-shared">0</span></button>
+  <button class="tab" id="tab-nyagah" onclick="setSpace('nyagah')">Nyagah <span class="tab-count" id="cnt-nyagah">0</span></button>
+  <button class="tab" id="tab-mum" onclick="setSpace('mum')">Mum <span class="tab-count" id="cnt-mum">0</span></button>
+</div>
+
+<div class="add-bar">
+  <button class="add-btn" onclick="document.getElementById('addModal').classList.add('show')">
+    <i class="ti ti-plus" style="font-size:15px"></i> Add task
+  </button>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">All tasks</button>
+  <button class="filter-btn" id="filter-pending" onclick="setFilter('pending')">Pending</button>
+  <button class="filter-btn" id="filter-in_progress" onclick="setFilter('in_progress')">In progress</button>
+  <button class="filter-btn" id="filter-done" onclick="setFilter('done')">Done</button>
+</div>
+
+<div class="task-list" id="taskList">
+  <div class="empty-state"><div class="empty-icon"><i class="ti ti-loader"></i></div><div>Loading...</div></div>
+</div>
+
+<!-- VIBES CARD -->
+<div class="vibes-section">
+  <div class="vibes-title">How are you feeling today?</div>
+  <div class="vibes-sub">Tap your mood. Mum will see this.</div>
+  <div class="vibes-grid">
+    <button class="vibe-btn vibe-1" id="vibe-1" onclick="tapVibe(1)"><span class="vibe-emoji">🌟</span><span class="vibe-label">Thriving</span></button>
+    <button class="vibe-btn vibe-2" id="vibe-2" onclick="tapVibe(2)"><span class="vibe-emoji">😊</span><span class="vibe-label">Good</span></button>
+    <button class="vibe-btn vibe-3" id="vibe-3" onclick="tapVibe(3)"><span class="vibe-emoji">😐</span><span class="vibe-label">Okay</span></button>
+    <button class="vibe-btn vibe-4" id="vibe-4" onclick="tapVibe(4)"><span class="vibe-emoji">😔</span><span class="vibe-label">Low</span></button>
+    <button class="vibe-btn vibe-5" id="vibe-5" onclick="tapVibe(5)"><span class="vibe-emoji">😞</span><span class="vibe-label">Struggling</span></button>
+  </div>
+  <div class="vibes-log" id="vibesLog"></div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div id="addModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">New task</div><button class="modal-close" onclick="document.getElementById('addModal').classList.remove('show')">×</button></div>
+    <div class="form-field"><label class="form-label">What needs doing</label><input class="form-input" id="newTitle" placeholder="Task title..."/></div>
+    <div class="form-field"><label class="form-label">Details</label><textarea class="form-textarea" id="newDesc" placeholder="Any extra context..."></textarea></div>
+    <div class="form-row">
+      <div class="form-field"><label class="form-label">Assigned to</label>
+        <select class="form-select" id="newOwner">
+          <option value="00000000-0000-0000-0000-000000000001">Nyagah</option>
+          <option value="00000000-0000-0000-0000-000000000002">Mum</option>
+        </select>
+      </div>
+      <div class="form-field"><label class="form-label">Space</label>
+        <select class="form-select" id="newSpace">
+          <option value="shared">Shared</option>
+          <option value="nyagah">Nyagah only</option>
+          <option value="mum">Mum only</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label class="form-label">Due date</label><input class="form-input" type="date" id="newDue"/></div>
+      <div class="form-field"><label class="form-label">Priority</label>
+        <select class="form-select" id="newPriority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="private-toggle" onclick="togglePrivate()">
+      <div class="private-toggle-left"><i class="ti ti-lock" style="font-size:16px;color:var(--ink3)"></i><div><div class="toggle-title">Make private</div><div class="toggle-sub">Others see it exists, not what it is</div></div></div>
+      <div class="pill" id="privatePill"><div class="pill-thumb"></div></div>
+    </div>
+    <button class="submit-btn" id="addBtn" onclick="addTask()">Add task</button>
+  </div>
+</div>
+
+<!-- VIBE NOTE MODAL (for low/struggling) -->
+<div id="vibeNoteModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="vibeNoteTitle">What is going on?</div><button class="modal-close" onclick="skipVibeNote()">×</button></div>
+    <div class="note-prompt" id="vibeNotePrompt">You don't have to carry this alone. Want to describe what is going on?</div>
+    <textarea class="note-textarea" id="vibeNoteInput" placeholder="What is up... (optional)"></textarea>
+    <div class="note-actions">
+      <button class="note-skip" onclick="skipVibeNote()">Skip</button>
+      <button class="note-save" onclick="saveVibeNote()">Log it</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESEARCH FULL MODAL -->
+<div id="researchModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">AI Research</div><button class="modal-close" onclick="document.getElementById('researchModal').classList.remove('show')">×</button></div>
+    <div class="research-full" id="researchFullText"></div>
+  </div>
+</div>
+
+<script>
+var API = 'https://familio-backend-production.up.railway.app';
+var NYAGAH_ID = '00000000-0000-0000-0000-000000000001';
+var MUM_ID = '00000000-0000-0000-0000-000000000002';
+var tasks = [];
+var activeSpace = 'shared';
+var activeFilter = 'all';
+var newPrivate = false;
+var researchingIds = [];
+var isLight = localStorage.getItem('familio_theme') === 'light';
+
+var VIBES = {
+  1:{label:'Thriving',emoji:'🌟',color:'#2D6A4F',low:false},
+  2:{label:'Good',emoji:'😊',color:'#639922',low:false},
+  3:{label:'Okay',emoji:'😐',color:'#BA7517',low:false},
+  4:{label:'Low',emoji:'😔',color:'#D85A30',low:true},
+  5:{label:'Struggling',emoji:'😞',color:'#A32D2D',low:true}
+};
+var vibeLogs = JSON.parse(localStorage.getItem('familio_vibes') || '[]');
+var pendingVibeLevel = null;
+
+var SAMPLES = [
+  {title:'Find best CBC schools for Zawadi',description:'Research top CBC primary schools in Nairobi. Compare fees, performance and reviews.',space:'shared',owner_id:'00000000-0000-0000-0000-000000000001',priority:'high',due_date:'2026-06-20',points:30},
+  {title:'Book dentist appointment',description:'Zawadi needs her 6-month checkup. Find a pediatric dentist near Karen.',space:'mum',owner_id:'00000000-0000-0000-0000-000000000002',priority:'medium',due_date:'2026-06-15',points:20},
+  {title:'Sort out NHIF contributions',description:'Check if family contributions are up to date and renew if needed.',space:'shared',owner_id:'00000000-0000-0000-0000-000000000002',priority:'high',due_date:'2026-06-30',points:25},
+  {title:'Make birthday cake',description:'Three-tier vanilla sponge with buttercream for the 18th.',space:'mum',owner_id:'00000000-0000-0000-0000-000000000002',priority:'medium',due_date:'2026-06-18',points:20},
+  {title:'Update CV and apply to 3 jobs',description:'Target McKinsey, Safaricom Graduate Programme, and KCB Management Trainee.',space:'nyagah',owner_id:'00000000-0000-0000-0000-000000000001',priority:'high',due_date:'2026-06-10',points:35},
+  {title:'Fix the gate lock',description:'The main gate padlock is broken. Get a new one from the hardware on Ngong Rd.',space:'shared',owner_id:'00000000-0000-0000-0000-000000000002',priority:'low',due_date:'2026-06-25',points:15}
+];
+
+function applyTheme() {
+  if (isLight) { document.body.classList.add('light'); document.getElementById('themeBtn').innerHTML = '<i class="ti ti-moon" style="font-size:13px"></i>'; }
+  else { document.body.classList.remove('light'); document.getElementById('themeBtn').innerHTML = '<i class="ti ti-sun" style="font-size:13px"></i>'; }
+}
+function toggleTheme() { isLight = !isLight; localStorage.setItem('familio_theme', isLight ? 'light' : 'dark'); applyTheme(); }
+
+function setFilter(f) {
+  activeFilter = f;
+  ['all','pending','in_progress','done'].forEach(function(x){ document.getElementById('filter-'+x).classList.toggle('active', x===f); });
+  renderTasks();
+}
+
+function showResearch(idx) {
+  var t = tasks[idx];
+  if (!t || !t.task_research || !t.task_research.length) return;
+  document.getElementById('researchFullText').innerHTML = t.task_research[0].summary.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/#{1,3} /g,'');
+  document.getElementById('researchModal').classList.add('show');
+}
+
+function tapVibe(level) {
+  for (var i=1;i<=5;i++) document.getElementById('vibe-'+i).classList.remove('sel');
+  document.getElementById('vibe-'+level).classList.add('sel');
+  if (VIBES[level].low) {
+    pendingVibeLevel = level;
+    var prompts = {4:"What is weighing on you today?", 5:"You don't have to carry this alone. What is going on?"};
+    document.getElementById('vibeNoteTitle').textContent = VIBES[level].emoji + ' ' + VIBES[level].label;
+    var other = CURRENT_USER === 'nyagah' ? 'Mum' : 'Nyagah';
+    document.getElementById('vibeNotePrompt').textContent = prompts[level];
+    document.getElementById('vibeNoteInput').value = '';
+    document.getElementById('vibeNoteModal').classList.add('show');
+  } else {
+    logVibe(level, '');
+  }
+}
+
+function skipVibeNote() {
+  document.getElementById('vibeNoteModal').classList.remove('show');
+  if (pendingVibeLevel) { logVibe(pendingVibeLevel, ''); pendingVibeLevel = null; }
+}
+
+function saveVibeNote() {
+  var note = document.getElementById('vibeNoteInput').value.trim();
+  document.getElementById('vibeNoteModal').classList.remove('show');
+  if (pendingVibeLevel) { logVibe(pendingVibeLevel, note); pendingVibeLevel = null; }
+}
+
+function logVibe(level, note) {
+  vibeLogs.unshift({level:level,label:VIBES[level].label,emoji:VIBES[level].emoji,color:VIBES[level].color,low:VIBES[level].low,note:note,who:'nyagah',time:new Date().toISOString()});
+  if (vibeLogs.length > 20) vibeLogs = vibeLogs.slice(0,20);
+  localStorage.setItem('familio_vibes', JSON.stringify(vibeLogs));
+  renderVibesLog();
+}
+
+function renderVibesLog() {
+  var log = document.getElementById('vibesLog');
+  if (!vibeLogs.length) { log.innerHTML=''; return; }
+  var html = '<div class="vibes-log-title">Recent check-ins</div>';
+  vibeLogs.slice(0,4).forEach(function(e) {
+    var timeStr = new Date(e.time).toLocaleDateString('en-KE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    var nudgeOther = e.low ? (e.who==='nyagah'?'Mum':'Nyagah') : null;
+    html += '<div class="vibe-entry"><span class="vibe-entry-emoji">'+e.emoji+'</span><div class="vibe-entry-info"><div class="vibe-entry-mood" style="color:'+e.color+'">'+e.label+'</div><div class="vibe-entry-time">'+timeStr+'</div>';
+    if (e.note) html += '<div class="vibe-entry-note">"'+e.note+'"</div>';
+    if (nudgeOther) html += '<div class="vibe-nudge">'+(e.who==='nyagah'?'Nyagah':'Mum')+' is feeling '+e.label.toLowerCase()+'.<button class="vibe-nudge-btn" onclick="alert(\'Open WhatsApp and check in\')">Check in with '+nudgeOther+'</button></div>';
+    html += '</div></div>';
+  });
+  log.innerHTML = html;
+}
+
+function togglePrivate() { newPrivate = !newPrivate; document.getElementById('privatePill').classList.toggle('on', newPrivate); }
+
+function getTasksForUser(userId) {
+  return tasks.filter(function(t){ return t.owner_id===userId || t.space==='shared'; });
+}
+
+function renderScores() {
+  [{id:NYAGAH_ID,s:'N'},{id:MUM_ID,s:'M'}].forEach(function(p) {
+    var ut = getTasksForUser(p.id);
+    var done = ut.filter(function(t){return t.status==='done';});
+    var pts = done.reduce(function(a,t){return a+(t.points||20);},0);
+    document.getElementById('pts'+p.s).textContent=pts;
+    document.getElementById('done'+p.s).textContent=done.length;
+    document.getElementById('left'+p.s).textContent=ut.length-done.length;
+    document.getElementById('meta'+p.s).textContent=ut.length+' task'+(ut.length!==1?'s':'');
+  });
+  var np=getTasksForUser(NYAGAH_ID).filter(function(t){return t.status==='done';}).reduce(function(a,t){return a+(t.points||20);},0);
+  var mp=getTasksForUser(MUM_ID).filter(function(t){return t.status==='done';}).reduce(function(a,t){return a+(t.points||20);},0);
+  document.getElementById('leaderName').textContent=(np>=mp?'Nyagah':'Mum')+' is leading';
+}
+
+function renderTabs() {
+  ['shared','nyagah','mum'].forEach(function(sp) {
+    var cnt=tasks.filter(function(t){return t.space===sp;}).length;
+    document.getElementById('tab-'+sp).classList.toggle('active',sp===activeSpace);
+    document.getElementById('cnt-'+sp).textContent=cnt;
+  });
+}
+
+function setSpace(sp) {
+  activeSpace=sp;
+  ['shared','nyagah','mum'].forEach(function(s){ document.getElementById('tab-'+s).classList.toggle('active',s===sp); });
+  render();
+}
+
+function renderTasks() {
+  var visible = tasks.filter(function(t){ return t.space===activeSpace; });
+  if (activeFilter !== 'all') visible = visible.filter(function(t){ return t.status===activeFilter; });
+  var list = document.getElementById('taskList');
+  if (!visible.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon"><i class="ti ti-check"></i></div><div>Nothing here yet</div></div>'; return; }
+  list.innerHTML = visible.map(function(task, idx) {
+    var isOwner=task.owner_id===NYAGAH_ID;
+    var isPrivate=task.is_private&&!isOwner;
+    var overdue=task.status!=='done'&&new Date(task.due_date)<new Date();
+    var isRes=researchingIds.indexOf(task.id)!==-1;
+    var research=task.task_research&&task.task_research.length>0?task.task_research[0]:null;
+    var dueStr=task.due_date?new Date(task.due_date).toLocaleDateString('en-KE',{month:'short',day:'numeric'}):'';
+    var aCls=task.owner_id===NYAGAH_ID?'avatar-n':'avatar-m';
+    var aLetter=task.owner_id===NYAGAH_ID?'N':'M';
+    var sLabel=task.status==='in_progress'?'In progress':task.status.charAt(0).toUpperCase()+task.status.slice(1);
+    var globalIdx = tasks.indexOf(task);
+    var resHtml='';
+    if (!isPrivate) {
+      if (research) {
+        var preview = research.summary.replace(/\*\*(.*?)\*\*/g,'$1').replace(/#{1,3} /g,'').replace(/\n/g,' ');
+        resHtml='<div class="research-preview"><div class="research-preview-label">AI research</div><div class="research-preview-text">'+preview+'</div><button class="research-see-more" onclick="showResearch('+globalIdx+')">See full results</button></div>';
+      } else {
+        resHtml='<button class="research-btn" onclick="triggerResearch(\''+task.id+'\')" '+(isRes?'disabled':'')+'>'+(isRes?'<i class="ti ti-refresh spin" style="font-size:12px"></i> Researching...':'<i class="ti ti-search" style="font-size:12px"></i> Research this')+'</button>';
+      }
+    }
+    return '<div class="task-card '+(task.status==='done'?'done':'')+'">'+
+      '<div class="task-top"><div style="flex:1"><div class="task-title '+(task.status==='done'?'strikethrough':'')+' '+(isPrivate?'blurred':'')+'">'+( isPrivate?'Private task':task.title)+'</div></div>'+
+      (!isPrivate?'<button class="delete-btn" onclick="deleteTask(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
+      '</div>'+
+      (task.description&&!isPrivate?'<div class="task-desc">'+task.description+'</div>':'')+
+      (isPrivate?'<div class="task-desc blurred">Working on something personal</div>':'')+
+      '<div class="task-footer"><div class="task-left">'+
+      '<div class="avatar '+aCls+'" style="width:22px;height:22px;font-size:10px">'+aLetter+'</div>'+
+      '<span class="chip chip-'+task.status+'">'+sLabel+'</span>'+
+      (!isPrivate?'<span class="chip chip-'+task.priority+'">'+task.priority.charAt(0).toUpperCase()+task.priority.slice(1)+'</span>':'')+
+      (isPrivate?'<span class="chip chip-private">Private</span>':'')+
+      '</div><div class="task-right">'+
+      (!isPrivate?'<span class="due-text '+(overdue?'overdue':'')+'">'+( overdue?'Overdue':dueStr)+'</span>':'')+
+      '<span class="pts-text">+'+(task.points||20)+'</span>'+
+      (!isPrivate?'<select class="status-select" onchange="changeStatus(\''+task.id+'\',this.value)"><option value="pending" '+(task.status==='pending'?'selected':'')+'>Pending</option><option value="in_progress" '+(task.status==='in_progress'?'selected':'')+'>In progress</option><option value="done" '+(task.status==='done'?'selected':'')+'>Done</option></select>':'')+
+      '</div></div>'+resHtml+'</div>';
+  }).join('');
+}
+
+function render() { renderScores(); renderTabs(); renderTasks(); }
+
+async function fetchTasks() {
+  try {
+    var res = await fetch(API+'/tasks');
+    tasks = await res.json();
+    render();
+  } catch(e) {
+    document.getElementById('taskList').innerHTML='<div class="empty-state"><div class="empty-icon"><i class="ti ti-wifi-off"></i></div><div>Cannot connect to backend.</div></div>';
+  }
+}
+
+async function seedSampleTasks() {
+  if (tasks.length > 0) return;
+  for (var i=0; i<SAMPLES.length; i++) {
+    try { await fetch(API+'/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(SAMPLES[i])}); } catch(e){}
+  }
+  await fetchTasks();
+}
+
+async function triggerResearch(taskId) {
+  if (researchingIds.indexOf(taskId)!==-1) return;
+  researchingIds.push(taskId); renderTasks();
+  try {
+    var res=await fetch(API+'/research/'+taskId,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requested_by:NYAGAH_ID})});
+    var data=await res.json();
+    if(data.success) await fetchTasks();
+  } catch(e){console.error(e);}
+  researchingIds=researchingIds.filter(function(id){return id!==taskId;});
+  renderTasks();
+}
+
+async function changeStatus(id, status) {
+  await fetch(API+'/tasks/'+id+'/status',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status,owner_id:NYAGAH_ID})});
+  await fetchTasks();
+}
+
+async function deleteTask(id) {
+  await fetch(API+'/tasks/'+id,{method:'DELETE'});
+  await fetchTasks();
+}
+
+async function addTask() {
+  var title=document.getElementById('newTitle').value.trim();
+  var due=document.getElementById('newDue').value;
+  if(!title||!due) return;
+  var btn=document.getElementById('addBtn'); btn.textContent='Adding...'; btn.disabled=true;
+  try {
+    await fetch(API+'/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:document.getElementById('newDesc').value,owner_id:document.getElementById('newOwner').value,space:document.getElementById('newSpace').value,due_date:due,priority:document.getElementById('newPriority').value,is_private:newPrivate,points:20})});
+    document.getElementById('addModal').classList.remove('show');
+    document.getElementById('newTitle').value='';
+    document.getElementById('newDesc').value='';
+    newPrivate=false;
+    document.getElementById('privatePill').classList.remove('on');
+    await fetchTasks();
+  } catch(e){console.error(e);}
+  btn.textContent='Add task'; btn.disabled=false;
+}
+
+
+var PINS = {nyagah:'4321', mum:'1234'};
+var CURRENT_USER = null;
+var pinBuffer = '';
+var loginTarget = null;
+
+function selectUser(who) {
+  loginTarget = who;
+  document.getElementById('lu-nyagah').classList.toggle('selected', who==='nyagah');
+  document.getElementById('lu-mum').classList.toggle('selected', who==='mum');
+  document.getElementById('pinSection').style.display = 'block';
+  document.getElementById('pinLabel').textContent = 'Enter PIN for ' + (who==='nyagah'?'Nyagah':'Mum');
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('loginError').textContent = '';
+}
+
+function pinPress(key) {
+  if (key === 'del') { pinBuffer = pinBuffer.slice(0,-1); updatePinDots(); return; }
+  if (key === 'ok') { checkPin(); return; }
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += key;
+  updatePinDots();
+  if (pinBuffer.length === 4) checkPin();
+}
+
+function updatePinDots() {
+  for (var i=0;i<4;i++) {
+    document.getElementById('pd'+i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+function checkPin() {
+  if (!loginTarget) return;
+  if (pinBuffer === PINS[loginTarget]) {
+    CURRENT_USER = loginTarget;
+    localStorage.setItem('familio_user', CURRENT_USER);
+    document.getElementById('loginScreen').style.display = 'none';
+    applyUserContext();
+    fetchTasks().then(function(){ seedSampleTasks(); });
+  } else {
+    document.getElementById('loginError').textContent = 'Wrong PIN, try again';
+    pinBuffer = '';
+    updatePinDots();
+  }
+}
+
+function applyUserContext() {
+  var isNyagah = CURRENT_USER === 'nyagah';
+  // Update vibes sub text
+  document.querySelector('.vibes-sub').textContent = 'Check in with yourself. ' + (isNyagah ? 'Mum' : 'Nyagah') + ' will see this.';
+  document.getElementById('currentUserLabel').textContent = isNyagah ? 'Nyagah' : 'Mum';
+  document.getElementById('logoutBtn').style.display = 'flex';
+}
+
+function logout() {
+  CURRENT_USER = null;
+  localStorage.removeItem('familio_user');
+  pinBuffer = '';
+  loginTarget = null;
+  document.getElementById('lu-nyagah').classList.remove('selected');
+  document.getElementById('lu-mum').classList.remove('selected');
+  document.getElementById('pinSection').style.display = 'none';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('logoutBtn').style.display = 'none';
+}
+
+// Auto-login if session saved
+document.addEventListener('DOMContentLoaded', function() {
+  var savedUser = localStorage.getItem('familio_user');
+  if (savedUser) {
+    CURRENT_USER = savedUser;
+    document.getElementById('loginScreen').style.display = 'none';
+    applyUserContext();
+    fetchTasks().then(function(){ seedSampleTasks(); });
+  }
+  renderVibesLog();
+});
+
+applyTheme();
+</script>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-wordmark">Fami<span>lio</span></div>
+  <div class="login-sub">Family accountability, together</div>
+  <div class="login-users">
+    <div class="login-user" id="lu-nyagah" onclick="selectUser('nyagah')">
+      <div class="login-user-avatar avatar-n" style="background:#C8873A">N</div>
+      <div class="login-user-name">Nyagah</div>
+    </div>
+    <div class="login-user" id="lu-mum" onclick="selectUser('mum')">
+      <div class="login-user-avatar avatar-m" style="background:#3D8B6B">M</div>
+      <div class="login-user-name">Mum</div>
+    </div>
+  </div>
+  <div class="login-pin-section" id="pinSection" style="display:none">
+    <div class="login-pin-label" id="pinLabel">Enter your PIN</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" onclick="pinPress('del')" style="font-size:14px">⌫</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key" onclick="pinPress('ok')" style="color:var(--accent)">OK</button>
+    </div>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+</body>
+</html>
