@@ -373,7 +373,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 var API = 'https://familio-backend-production.up.railway.app';
 var NYAGAH_ID = '00000000-0000-0000-0000-000000000001';
 var MUM_ID = '00000000-0000-0000-0000-000000000002';
-var PINS = {nyagah:'4321', mum:'1234'};
+var PINS = {nyagah:'7890', mum:'0987'};
 var CURRENT_USER = null;
 var MY_ID = null;
 var THEIR_ID = null;
@@ -621,7 +621,8 @@ function renderVibesLog() {
       html += '<div class="vibe-nudge">We have let '+other+' know how you are feeling.</div>';
     } else if (e.low && !isMe) {
       var theirNumber = (e.who==='nyagah') ? '254740116371' : '254720666029';
-      var waMsg = encodeURIComponent('Hey dear \u2764\ufe0f %0A%0AJust checking in on you. I noticed you have been feeling ' + e.label.toLowerCase() + ' and I want you to know I am here for you. %0A%0AWhat is going on? Talk to me \ud83d\ude0a');
+      var rawMsg = 'Hey dear \u2764\ufe0f \n\nJust checking in on you. I noticed you have been feeling ' + e.label.toLowerCase() + ' and I want you to know I am here for you. \n\nWhat is going on? Talk to me \ud83d\ude0a';
+      var waMsg = encodeURIComponent(rawMsg);
       var waUrl = 'https://wa.me/' + theirNumber + '?text=' + waMsg;
       html += '<div class="vibe-nudge">'+uName+' might need a check-in. <button class="vibe-nudge-btn" onclick="window.open(\''+waUrl+'\',\'_blank\')">Check in with '+uName+'</button></div>';
     }
