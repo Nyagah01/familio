@@ -147,9 +147,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 .modal-close{background:var(--surface2);border:1px solid var(--border);width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--ink2);display:flex;align-items:center;justify-content:center;}
 .form-field{margin-bottom:12px;}
 .form-label{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:5px;}
-.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);background:var(--surface2);outline:none;}
-.form-textarea{resize:none;height:64px;}
-.form-row{display:flex;gap:10px;}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);background:var(--surface2);outline:none;height:42px;}
+.form-textarea{resize:none;height:64px!important;}
+.form-row{display:flex;gap:10px;align-items:flex-start;}
 .form-row .form-field{flex:1;}
 .private-toggle{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;margin-bottom:12px;}
 .private-toggle-left{display:flex;align-items:center;gap:10px;}
@@ -290,8 +290,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
       </div>
     </div>
     <div class="form-row">
-      <div class="form-field"><label class="form-label">Due date</label><input class="form-input" type="date" id="newDue"/></div>
-      <div class="form-field"><label class="form-label">Priority</label>
+      <div class="form-field">
+        <label class="form-label">Due date <span style="color:#E05A4A">*</span></label>
+        <input class="form-input" type="date" id="newDue" style="width:100%;cursor:pointer;" onchange="document.getElementById('dueDateError').style.display='none'"/>
+        <div id="dueDateError" style="display:none;font-size:11px;color:#E05A4A;margin-top:4px">Due date is required</div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Priority</label>
         <select class="form-select" id="newPriority">
           <option value="high">High</option>
           <option value="medium" selected>Medium</option>
@@ -533,6 +538,14 @@ function setSpace(sp) {
 }
 
 // RESEARCH MODAL
+function linkify(text) {
+  var urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g;
+  return text.replace(urlRegex, function(url) {
+    var display = url.length > 50 ? url.substring(0, 50) + '...' : url;
+    return '<a href="' + url + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;word-break:break-all;">' + display + '</a>';
+  });
+}
+
 function showResearch(taskId) {
   var task = null;
   for (var i=0;i<tasks.length;i++) { if (tasks[i].id===taskId) { task=tasks[i]; break; } }
@@ -557,7 +570,7 @@ function showResearch(taskId) {
   blocks.forEach(function(b) {
     html += '<div class="research-block">';
     if (b.label) html += '<div class="research-block-label">'+b.label+'</div>';
-    html += '<div class="research-block-text">'+b.text.join('<br>')+'</div></div>';
+    html += '<div class="research-block-text">'+linkify(b.text.join('<br>'))+'</div></div>';
   });
   document.getElementById('researchBody').innerHTML = html;
   document.getElementById('researchModal').classList.add('show');
@@ -692,7 +705,7 @@ function renderTasks() {
     var resHtml = '';
     if (!isPrivate) {
       if (research) {
-        var preview = research.summary.replace(/\*\*(.*?)\*\*/g,'$1').replace(/#{1,3} /g,'').replace(/\n/g,' ');
+        var preview = linkify(research.summary.replace(/\*\*(.*?)\*\*/g,'$1').replace(/#{1,3} /g,'').replace(/\n/g,' '));
         resHtml = '<div class="research-preview"><div class="research-preview-label">AI research</div><div class="research-preview-text">'+preview+'</div><button class="research-see-more" onclick="showResearch(\''+task.id+'\')">See full results</button></div>';
       } else {
         resHtml = '<button class="research-btn" onclick="triggerResearch(\''+task.id+'\')" '+(isRes?'disabled':'')+'>'+(isRes?'<i class="ti ti-refresh spin" style="font-size:12px"></i> Researching...':'<i class="ti ti-search" style="font-size:12px"></i> Research this')+'</button>';
@@ -803,12 +816,13 @@ async function clearCompleted() {
 async function addTask() {
   var title=document.getElementById('newTitle').value.trim();
   var due=document.getElementById('newDue').value;
-  if(!title||!due) return;
+  if(!title||!due) { if(!title) document.getElementById('newTitle').placeholder='Title is required'; if(!due) document.getElementById('dueDateError').style.display='block'; return; }
   var btn=document.getElementById('addBtn'); btn.textContent='Adding...'; btn.disabled=true;
   try {
     await fetch(API+'/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:document.getElementById('newDesc').value,owner_id:document.getElementById('newOwner').value,space:document.getElementById('newSpace').value,due_date:due,priority:document.getElementById('newPriority').value,is_private:newPrivate,points:20})});
     document.getElementById('addModal').classList.remove('show');
     document.getElementById('newTitle').value=''; document.getElementById('newDesc').value='';
+    document.getElementById('dueDateError').style.display='none';
     newPrivate=false; document.getElementById('privatePill').classList.remove('on');
     await fetchTasks();
   } catch(e){console.error(e);}
