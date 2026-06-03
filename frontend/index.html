@@ -440,6 +440,8 @@ function checkPin() {
     localStorage.setItem('familio_user', CURRENT_USER);
     document.getElementById('loginScreen').style.display = 'none';
     applyUserContext();
+    activeSpace = 'me';
+    setSpace('me');
     fetchTasks().then(function(){ seedSampleTasks(); });
   } else {
     document.getElementById('loginError').textContent = 'Wrong PIN, try again';
@@ -463,7 +465,7 @@ function applyUserContext() {
   document.getElementById('vibesSub').textContent = 'Tap your mood. ' + theirName + ' will see this.';
   // Update tab labels
   document.getElementById('tab-me').childNodes[0].textContent = 'Mine ';
-  document.getElementById('tab-them').childNodes[0].textContent = 'Theirs ';
+  document.getElementById('tab-them').childNodes[0].textContent = theirName + ' ';
   // Update add modal owner default
   var ownerSel = document.getElementById('newOwner');
   ownerSel.options[0].value = NYAGAH_ID;
@@ -611,7 +613,7 @@ function renderScores() {
   document.getElementById('theirDone').textContent=theirDone.length;
   document.getElementById('theirLeft').textContent=theirTasks.length-theirDone.length;
   document.getElementById('theirMeta').textContent=theirTasks.length+' task'+(theirTasks.length!==1?'s':'');
-  var txt = myPts===0&&theirPts===0 ? 'No tasks done yet' : myPts===theirPts ? 'Tied' : myPts>theirPts ? (CURRENT_USER==='nyagah'?'Nyagah':'Mum')+' is leading' : (CURRENT_USER==='nyagah'?'Mum':'Nyagah')+' is leading';
+  var theirName2 = CURRENT_USER==='nyagah'?'Mum':'Nyagah'; var txt = myPts===0&&theirPts===0 ? 'No tasks done yet' : myPts===theirPts ? 'It is a tie!' : myPts>theirPts ? 'You are leading' : theirName2+' is leading';
   document.getElementById('leaderName').textContent = txt;
 }
 
@@ -659,12 +661,14 @@ function renderTasks() {
     }
 
     var actionsHtml = '';
-    if (!isPrivate) {
+    if (!isPrivate && isOwner) {
       if (isDone) {
         actionsHtml = '<div class="task-actions"><button class="done-btn already-done"><i class="ti ti-check" style="font-size:13px"></i> Done</button><select class="status-select" onchange="changeStatus(\''+task.id+'\',this.value)"><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="done" selected>Done</option></select></div>';
       } else {
         actionsHtml = '<div class="task-actions"><button class="done-btn" onclick="markDone(\''+task.id+'\')"><i class="ti ti-check" style="font-size:13px"></i> Mark done</button><select class="status-select" onchange="changeStatus(\''+task.id+'\',this.value)"><option value="pending" '+(task.status==='pending'?'selected':'')+'>Pending</option><option value="in_progress" '+(task.status==='in_progress'?'selected':'')+'>In progress</option><option value="done">Done</option></select></div>';
       }
+    } else if (!isPrivate && !isOwner && isDone) {
+      actionsHtml = '<div class="task-actions"><button class="done-btn already-done"><i class="ti ti-check" style="font-size:13px"></i> Done</button></div>';
     }
 
     return '<div class="task-card '+(isDone?'done':'')+'" id="tc-'+task.id+'">'+
@@ -752,6 +756,8 @@ document.addEventListener('DOMContentLoaded', function() {
     THEIR_ID = savedUser === 'nyagah' ? MUM_ID : NYAGAH_ID;
     document.getElementById('loginScreen').style.display = 'none';
     applyUserContext();
+    activeSpace = 'me';
+    setSpace('me');
     fetchTasks().then(function(){ seedSampleTasks(); });
   }
   renderVibesLog();
