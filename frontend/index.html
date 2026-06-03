@@ -289,20 +289,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-field">
-        <label class="form-label">Due date <span style="color:#E05A4A">*</span></label>
-        <input class="form-input" type="date" id="newDue" style="width:100%;cursor:pointer;" onchange="document.getElementById('dueDateError').style.display='none'"/>
-        <div id="dueDateError" style="display:none;font-size:11px;color:#E05A4A;margin-top:4px">Due date is required</div>
-      </div>
-      <div class="form-field">
-        <label class="form-label">Priority</label>
-        <select class="form-select" id="newPriority">
-          <option value="high">High</option>
-          <option value="medium" selected>Medium</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
+    <div class="form-field">
+      <label class="form-label">Due date <span style="color:#E05A4A">*</span></label>
+      <input class="form-input" type="date" id="newDue" style="width:100%;cursor:pointer;" onchange="document.getElementById('dueDateError').style.display='none'"/>
+      <div id="dueDateError" style="display:none;font-size:11px;color:#E05A4A;margin-top:4px">Due date is required</div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Priority</label>
+      <select class="form-select" id="newPriority">
+        <option value="high">High</option>
+        <option value="medium" selected>Medium</option>
+        <option value="low">Low</option>
+      </select>
     </div>
     <div class="private-toggle" onclick="togglePrivate()">
       <div class="private-toggle-left"><i class="ti ti-lock" style="font-size:16px;color:var(--ink3)"></i><div><div class="toggle-title">Make private</div><div class="toggle-sub">Others see it exists, not what it is</div></div></div>
