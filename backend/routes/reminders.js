@@ -34,11 +34,13 @@ async function runDailyReminders() {
   var sent = 0;
   var messages = {};
 
+  console.log('Tasks found:', tasks.length);
   tasks.forEach(function(task) {
     var user = USERS[task.owner_id];
-    if (!user) return;
+    if (!user) { console.log('No user for owner_id:', task.owner_id); return; }
 
     var days = daysUntil(task.due_date);
+    console.log('Task:', task.title, '| Due date:', task.due_date, '| Days until:', days, '| Owner:', user.name);
     var msg = null;
 
     if (days < 0) {
