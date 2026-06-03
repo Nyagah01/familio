@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const tasksRouter = require('./routes/tasks');
 const researchRouter = require('./routes/research');
+const vibesRouter = require('./routes/vibes');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.get('/', (req, res) => {
 
 app.use('/tasks', tasksRouter);
 app.use('/research', researchRouter);
+app.use('/vibes', vibesRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

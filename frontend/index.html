@@ -390,7 +390,7 @@ var VIBES = {
   4:{label:'Low',emoji:'😔',color:'#D85A30',low:true},
   5:{label:'Struggling',emoji:'😞',color:'#A32D2D',low:true}
 };
-var vibeLogs = JSON.parse(localStorage.getItem('familio_vibes') || '[]');
+var vibeLogs = [];
 var pendingVibeLevel = null;
 var SAMPLES = [
   {title:'Find best CBC schools for Zawadi',description:'Research top CBC primary schools in Nairobi. Compare fees, performance and reviews.',space:'shared',owner_id:NYAGAH_ID,priority:'high',due_date:'2026-06-20',points:30},
@@ -575,31 +575,33 @@ function tapVibe(level) {
 }
 function skipVibeNote() { document.getElementById('vibeNoteModal').classList.remove('show'); if (pendingVibeLevel) { logVibe(pendingVibeLevel, ''); pendingVibeLevel = null; } }
 function saveVibeNote() { var note = document.getElementById('vibeNoteInput').value.trim(); document.getElementById('vibeNoteModal').classList.remove('show'); if (pendingVibeLevel) { logVibe(pendingVibeLevel, note); pendingVibeLevel = null; } }
-function clearVibes() {
-  vibeLogs = [];
-  localStorage.removeItem('familio_vibes');
+async function clearVibes() {
+  try {
+    await fetch(API+'/vibes/clear/'+MY_ID, { method: 'DELETE' });
+    await fetchVibes();
+  } catch(e) { console.error(e); }
   for (var i=1;i<=5;i++) document.getElementById('vibe-'+i).className = 'vibe-btn';
-  renderVibesLog();
 }
 
-function logVibe(level, note) {
-  vibeLogs.unshift({level:level,label:VIBES[level].label,emoji:VIBES[level].emoji,color:VIBES[level].color,low:VIBES[level].low,note:note,who:CURRENT_USER||'nyagah',time:new Date().toISOString()});
-  if (vibeLogs.length > 20) vibeLogs = vibeLogs.slice(0,20);
-  localStorage.setItem('familio_vibes', JSON.stringify(vibeLogs));
-  renderVibesLog();
+async function logVibe(level, note) {
+  try {
+    await fetch(API+'/vibes', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        user_id: MY_ID,
+        level: level,
+        label: VIBES[level].label,
+        emoji: VIBES[level].emoji,
+        color: VIBES[level].color,
+        low: VIBES[level].low,
+        note: note || ''
+      })
+    });
+    await fetchVibes();
+  } catch(e) { console.error(e); }
 }
-function cleanVibeData() {
-  // Fix any legacy entries with wrong who field
-  var changed = false;
-  vibeLogs = vibeLogs.map(function(e) {
-    if (!e.who || e.who === '') { e.who = 'nyagah'; changed = true; }
-    return e;
-  });
-  if (changed) localStorage.setItem('familio_vibes', JSON.stringify(vibeLogs));
-}
-
 function renderVibesLog() {
-  cleanVibeData();
   var log = document.getElementById('vibesLog');
   if (!vibeLogs.length) { log.innerHTML=''; return; }
   var html = '<div class="vibes-log-title">Recent check-ins</div>';
@@ -731,6 +733,26 @@ async function markDone(id) {
   fireConfetti();
 }
 
+async function fetchVibes() {
+  try {
+    var res = await fetch(API+'/vibes');
+    var data = await res.json();
+    vibeLogs = data.map(function(v) {
+      return {
+        level: v.level,
+        label: v.label,
+        emoji: v.emoji,
+        color: v.color,
+        low: v.low,
+        note: v.note,
+        who: v.user_id === NYAGAH_ID ? 'nyagah' : 'mum',
+        time: v.created_at
+      };
+    });
+    renderVibesLog();
+  } catch(e) { console.error(e); }
+}
+
 async function fetchTasks() {
   try { var res=await fetch(API+'/tasks'); tasks=await res.json(); render(); }
   catch(e) { document.getElementById('taskList').innerHTML='<div class="empty-state"><div class="empty-icon"><i class="ti ti-wifi-off"></i></div><div>Cannot connect to backend.</div></div>'; }
@@ -800,8 +822,8 @@ document.addEventListener('DOMContentLoaded', function() {
     activeSpace = 'me';
     setSpace('me');
     fetchTasks().then(function(){ seedSampleTasks(); });
+    fetchVibes();
   }
-  renderVibesLog();
 });
 </script>
 </body>
