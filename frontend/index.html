@@ -583,11 +583,17 @@ function renderVibesLog() {
   var html = '<div class="vibes-log-title">Recent check-ins</div>';
   vibeLogs.slice(0,4).forEach(function(e) {
     var uName = e.who==='nyagah'?'Nyagah':'Mum';
-    var nudgeOther = e.low ? (e.who==='nyagah'?'Mum':'Nyagah') : null;
+    var isMe = e.who === CURRENT_USER;
+    var other = e.who==='nyagah'?'Mum':'Nyagah';
     var timeStr = new Date(e.time).toLocaleDateString('en-KE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    html += '<div class="vibe-entry"><span class="vibe-entry-emoji">'+e.emoji+'</span><div class="vibe-entry-info"><div class="vibe-entry-mood" style="color:'+e.color+'">'+uName+' is '+e.label.toLowerCase()+'</div><div class="vibe-entry-time">'+timeStr+'</div>';
+    var moodLabel = isMe ? 'You are feeling '+e.label.toLowerCase() : uName+' is '+e.label.toLowerCase();
+    html += '<div class="vibe-entry"><span class="vibe-entry-emoji">'+e.emoji+'</span><div class="vibe-entry-info"><div class="vibe-entry-mood" style="color:'+e.color+'">'+moodLabel+'</div><div class="vibe-entry-time">'+timeStr+'</div>';
     if (e.note) html += '<div class="vibe-entry-note">"'+e.note+'"</div>';
-    if (nudgeOther) html += '<div class="vibe-nudge">'+uName+' might need a check-in.<button class="vibe-nudge-btn" onclick="alert(\'Open WhatsApp and check in!\')">Check in with '+nudgeOther+'</button></div>';
+    if (e.low && isMe) {
+      html += '<div class="vibe-nudge">We have let '+other+' know how you are feeling.</div>';
+    } else if (e.low && !isMe) {
+      html += '<div class="vibe-nudge">'+uName+' might need a check-in.<button class="vibe-nudge-btn" onclick="alert(\'Open WhatsApp and check in!\')">Check in with '+uName+'</button></div>';
+    }
     html += '</div></div>';
   });
   log.innerHTML = html;
