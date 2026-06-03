@@ -446,7 +446,10 @@ function checkPin() {
     applyUserContext();
     activeSpace = 'me';
     setSpace('me');
+    vibeLogs = [];
+    renderVibesLog();
     fetchTasks().then(function(){ seedSampleTasks(); });
+    fetchVibes();
   } else {
     document.getElementById('loginError').textContent = 'Wrong PIN, try again';
     pinBuffer = '';
@@ -584,6 +587,7 @@ async function clearVibes() {
 }
 
 async function logVibe(level, note) {
+  if (!MY_ID) return;
   try {
     await fetch(API+'/vibes', {
       method: 'POST',
@@ -617,7 +621,7 @@ function renderVibesLog() {
       html += '<div class="vibe-nudge">We have let '+other+' know how you are feeling.</div>';
     } else if (e.low && !isMe) {
       var theirNumber = (e.who==='nyagah') ? '254740116371' : '254720666029';
-      var waMsg = encodeURIComponent('Hey dear, just checking in on you. I noticed you logged that you are feeling ' + e.label.toLowerCase() + '. What is going on?');
+      var waMsg = encodeURIComponent('Hey dear \u2764\ufe0f Just checking in on you. I noticed you have been feeling ' + e.label.toLowerCase() + ' and I want you to know I am here for you. What is going on? Talk to me \ud83d\ude0a');
       var waUrl = 'https://wa.me/' + theirNumber + '?text=' + waMsg;
       html += '<div class="vibe-nudge">'+uName+' might need a check-in. <button class="vibe-nudge-btn" onclick="window.open(\''+waUrl+'\',\'_blank\')">Check in with '+uName+'</button></div>';
     }
@@ -734,6 +738,7 @@ async function markDone(id) {
 }
 
 async function fetchVibes() {
+  if (!MY_ID) return;
   try {
     var res = await fetch(API+'/vibes');
     var data = await res.json();
@@ -821,7 +826,10 @@ document.addEventListener('DOMContentLoaded', function() {
     applyUserContext();
     activeSpace = 'me';
     setSpace('me');
+    vibeLogs = [];
+    renderVibesLog();
     fetchTasks().then(function(){ seedSampleTasks(); });
+    fetchVibes();
     fetchVibes();
   }
 });
