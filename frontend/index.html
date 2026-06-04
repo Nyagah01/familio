@@ -598,24 +598,26 @@ function pinPress(key) {
   if (pinBuffer.length >= 4) return;
   pinBuffer += key;
   updatePinDots();
-  if (pinBuffer.length === 4) { setTimeout(checkPin, 100); }
+  if (pinBuffer.length === 4) { checkPin(); }
 }
 
 function updatePinDots() {
   for (var i=0;i<4;i++) document.getElementById('pd'+i).classList.toggle('filled', i < pinBuffer.length);
 }
 
-async function checkPin() {
+function checkPin() {
   if (!loginTarget || pinBuffer.length < 4) return;
   var userId = loginTarget === 'nyagah' ? NYAGAH_ID : MUM_ID;
+  var enteredPin = pinBuffer;
   document.getElementById('loginError').textContent = 'Checking...';
-  try {
-    var res = await fetch(API+'/pins/verify', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({user_id: userId, pin: pinBuffer})
-    });
-    var data = await res.json();
+
+  fetch(API+'/pins/verify', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user_id: userId, pin: enteredPin})
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
     if (data.valid) {
       CURRENT_USER = loginTarget;
       MY_ID = userId;
@@ -636,11 +638,12 @@ async function checkPin() {
       pinBuffer = '';
       updatePinDots();
     }
-  } catch(e) {
-    document.getElementById('loginError').textContent = 'Connection error, try again';
+  })
+  .catch(function() {
+    document.getElementById('loginError').textContent = 'Connection error - check internet';
     pinBuffer = '';
     updatePinDots();
-  }
+  });
 }
 
 function applyUserContext() {
