@@ -1109,7 +1109,7 @@ async function addTask() {
   if(!title||!due) { if(!title) document.getElementById('newTitle').placeholder='Title is required'; if(!due) document.getElementById('dueDateError').style.display='block'; return; }
   var btn=document.getElementById('addBtn'); btn.textContent='Adding...'; btn.disabled=true;
   try {
-    await fetch(API+'/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:document.getElementById('newDesc').value,owner_id:document.getElementById('newOwner').value,space:document.getElementById('newSpace').value,due_date:due,priority:document.getElementById('newPriority').value,is_private:newPrivate,points:20})});
+    await fetch(API+'/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:document.getElementById('newDesc').value,owner_id:document.getElementById('newOwner').value,space:(document.getElementById('newSpace').value==='me'?(CURRENT_USER==='nyagah'?'nyagah':'mum'):'shared'),due_date:due,priority:document.getElementById('newPriority').value,is_private:newPrivate,points:20})});
     document.getElementById('addModal').classList.remove('show');
     document.getElementById('newTitle').value=''; document.getElementById('newDesc').value='';
     document.getElementById('dueDateError').style.display='none';
