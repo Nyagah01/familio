@@ -657,7 +657,7 @@ function checkPin() {
       setSpace('me');
       vibeLogs = [];
       renderVibesLog();
-      fetchTasks().then(function(){ seedSampleTasks(); });
+      fetchTasks();
       fetchVibes();
       setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); } }, 30000);
     } else {
@@ -976,14 +976,6 @@ async function fetchTasks() {
   catch(e) { document.getElementById('taskList').innerHTML='<div class="empty-state"><div class="empty-icon"><i class="ti ti-wifi-off"></i></div><div>Cannot connect to backend.</div></div>'; }
 }
 
-async function seedSampleTasks() {
-  if (tasks.length > 0) return;
-  for (var i=0;i<SAMPLES.length;i++) {
-    try { await fetch(API+'/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(SAMPLES[i])}); } catch(e){}
-  }
-  await fetchTasks();
-}
-
 async function triggerResearch(taskId) {
   if (researchingIds.indexOf(taskId)!==-1) return;
   researchingIds.push(taskId); renderTasks();
@@ -1133,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setSpace('me');
     vibeLogs = [];
     renderVibesLog();
-    fetchTasks().then(function(){ seedSampleTasks(); });
+    fetchTasks();
     fetchVibes();
     setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); } }, 30000);
   }
