@@ -706,6 +706,8 @@ function applyUserContext() {
   var theirName = isNyagah ? 'Mum' : 'Nyagah';
   document.getElementById('currentUserLabel').textContent = myName;
   document.getElementById('profileBtn').style.display = 'flex';
+  document.getElementById('profileBtn').style.background = isNyagah ? '#C8873A' : '#3D8B6B';
+  document.getElementById('profileBtn').textContent = isNyagah ? 'N' : 'M';
   document.getElementById('myAvatar').textContent = isNyagah ? 'N' : 'M';
   document.getElementById('myAvatar').className = 'avatar ' + (isNyagah ? 'avatar-n' : 'avatar-m');
   document.getElementById('myName').textContent = myName;
