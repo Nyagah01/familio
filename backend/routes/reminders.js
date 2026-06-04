@@ -6,9 +6,12 @@ const twilio = require('twilio');
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const FROM = 'whatsapp:' + process.env.TWILIO_WHATSAPP_NUMBER;
 
+const NYAGAH_ID = '00000000-0000-0000-0000-000000000001';
+const MUM_ID = '00000000-0000-0000-0000-000000000002';
+
 const USERS = {
-  '00000000-0000-0000-0000-000000000001': { name: 'Nyagah', phone: 'whatsapp:+254740116371' },
-  '00000000-0000-0000-0000-000000000002': { name: 'Mum', phone: 'whatsapp:+254720666029' },
+  [NYAGAH_ID]: { name: 'Nyagah', phone: 'whatsapp:+254740116371' },
+  [MUM_ID]: { name: 'Mum', phone: 'whatsapp:+254720666029' },
 };
 
 async function sendReminder(to, message) {
@@ -34,13 +37,19 @@ async function runDailyReminders() {
   var sent = 0;
   var messages = {};
 
-  console.log('Tasks found:', tasks.length);
   tasks.forEach(function(task) {
-    var user = USERS[task.owner_id];
-    if (!user) { console.log('No user for owner_id:', task.owner_id); return; }
+    // For shared tasks, remind both users. For personal, remind owner only.
+    var usersToRemind = [];
+    if (task.space === 'shared') {
+      usersToRemind = [USERS[NYAGAH_ID], USERS[MUM_ID]];
+    } else {
+      var owner = USERS[task.owner_id];
+      if (owner) usersToRemind = [owner];
+    }
 
     var days = daysUntil(task.due_date);
-    console.log('Task:', task.title, '| Due date:', task.due_date, '| Days until:', days, '| Owner:', user.name);
+
+    usersToRemind.forEach(function(user) {
     var msg = null;
 
     if (days < 0) {
@@ -57,6 +66,7 @@ async function runDailyReminders() {
       if (!messages[user.phone]) messages[user.phone] = [];
       messages[user.phone].push(msg);
     }
+    }); // end usersToRemind
   });
 
   for (var phone in messages) {
@@ -74,6 +84,16 @@ async function runDailyReminders() {
 
 // Manual trigger endpoint
 router.post('/run', async (req, res) => {
+  try {
+    var result = await runDailyReminders();
+    res.json({ success: true, ...result });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Easy browser test endpoint
+router.get('/test', async (req, res) => {
   try {
     var result = await runDailyReminders();
     res.json({ success: true, ...result });
