@@ -200,8 +200,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
   <div class="header-row1">
     <div class="wordmark">Fami<span>lio</span></div>
     <div class="header-controls">
-      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"><i class="ti ti-sun" style="font-size:13px"></i></button>
-      <button class="logout-btn" id="logoutBtn" onclick="logout()"><i class="ti ti-logout" style="font-size:12px"></i><span id="currentUserLabel"></span></button>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" style="display:none"></button>
+      <button class="theme-btn" onclick="openSettings()" style="display:none" id="settingsBtn"><i class="ti ti-settings" style="font-size:13px"></i></button>
+      <button class="logout-btn" id="logoutBtn" onclick="logout()" style="display:none"><span id="currentUserLabel"></span></button>
     </div>
   </div>
   <div class="header-row2">
@@ -234,9 +235,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
   <button class="tab" id="tab-them" onclick="setSpace('them')">Theirs <span class="tab-count" id="cnt-them">0</span></button>
 </div>
 
-<div class="add-bar">
-  <button class="add-btn" onclick="document.getElementById('addModal').classList.add('show')">
+<div class="add-bar" style="display:flex;gap:10px;">
+  <button class="add-btn" style="flex:1;" onclick="document.getElementById('addModal').classList.add('show')">
     <i class="ti ti-plus" style="font-size:15px"></i> Add task
+  </button>
+  <button class="add-btn" id="reminderBtn" onclick="sendReminders()" style="flex:1;background:var(--surface2);color:var(--ink2);border:1px solid var(--border);">
+    <i class="ti ti-brand-whatsapp" style="font-size:15px"></i> Get reminder
   </button>
 </div>
 
@@ -274,21 +278,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
     <div class="modal-header"><div class="modal-title">New task</div><button class="modal-close" onclick="document.getElementById('addModal').classList.remove('show')">×</button></div>
     <div class="form-field"><label class="form-label">What needs doing</label><input class="form-input" id="newTitle" placeholder="Task title..."/></div>
     <div class="form-field"><label class="form-label">Details</label><textarea class="form-textarea" id="newDesc" placeholder="Any extra context..."></textarea></div>
-    <div class="form-row">
-      <div class="form-field"><label class="form-label">Assigned to</label>
-        <select class="form-select" id="newOwner">
-          <option value="00000000-0000-0000-0000-000000000001">Nyagah</option>
-          <option value="00000000-0000-0000-0000-000000000002">Mum</option>
-        </select>
-      </div>
-      <div class="form-field"><label class="form-label">Space</label>
-        <select class="form-select" id="newSpace">
-          <option value="shared">Shared</option>
-          <option value="nyagah">Nyagah only</option>
-          <option value="mum">Mum only</option>
-        </select>
-      </div>
+    <div class="form-field">
+      <label class="form-label">Space</label>
+      <select class="form-select" id="newSpace">
+        <option value="me">Just me</option>
+        <option value="shared">Shared</option>
+      </select>
     </div>
+    <input type="hidden" id="newOwner" value=""/>
     <div class="form-field">
       <label class="form-label">Due date <span style="color:#E05A4A">*</span></label>
       <input class="form-input" type="date" id="newDue" style="width:100%;cursor:pointer;" onchange="document.getElementById('dueDateError').style.display='none'"/>
@@ -334,6 +331,71 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 <!-- CONFETTI CONTAINER -->
 <div class="confetti-wrap" id="confettiWrap"></div>
 
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="modal-close" onclick="document.getElementById('settingsModal').classList.remove('show')">×</button>
+    </div>
+
+    <!-- Theme toggle -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Appearance</div>
+      <div onclick="toggleTheme()" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="ti ti-sun" style="font-size:16px;color:var(--ink3)"></i>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--ink)">Dark / Light mode</div>
+            <div style="font-size:11px;color:var(--ink3)" id="themeLabel">Currently dark</div>
+          </div>
+        </div>
+        <div class="pill" id="themePill"><div class="pill-thumb"></div></div>
+      </div>
+    </div>
+
+    <!-- Change PIN -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Change PIN</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input class="form-input" type="password" id="currentPin" placeholder="Current PIN" maxlength="4" inputmode="numeric"/>
+        <input class="form-input" type="password" id="newPin" placeholder="New PIN (4 digits)" maxlength="4" inputmode="numeric"/>
+        <input class="form-input" type="password" id="confirmPin" placeholder="Confirm new PIN" maxlength="4" inputmode="numeric"/>
+        <div id="pinChangeError" style="font-size:11px;color:#E05A4A;display:none;"></div>
+        <div id="pinChangeSuccess" style="font-size:11px;color:var(--green);display:none;">PIN updated successfully!</div>
+        <button onclick="changePin()" style="padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Update PIN</button>
+      </div>
+    </div>
+
+    <!-- Account info -->
+    <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink)" id="settingsUserName">Nyagah</div>
+        <div style="font-size:11px;color:var(--ink3)">Logged in</div>
+      </div>
+      <button onclick="document.getElementById('settingsModal').classList.remove('show');logout();" style="font-size:11px;color:#E05A4A;background:none;border:1px solid rgba(224,90,74,0.3);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Sign out</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- RESCHEDULE MODAL -->
+<div id="rescheduleModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Reschedule task</div>
+      <button class="modal-close" onclick="document.getElementById('rescheduleModal').classList.remove('show')">×</button>
+    </div>
+    <div style="font-size:13px;color:var(--ink2);margin-bottom:16px;">This task is overdue. Pick a new due date to keep it on track.</div>
+    <div class="form-field">
+      <label class="form-label">New due date</label>
+      <input class="form-input" type="date" id="rescheduleDate" style="width:100%;cursor:pointer;"/>
+    </div>
+    <button onclick="confirmReschedule()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">Reschedule</button>
+  </div>
+</div>
+
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login-screen">
   <div class="login-wordmark">Fami<span>lio</span></div>
@@ -369,6 +431,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
       <button class="pin-key" onclick="pinPress('ok')" style="color:var(--accent)">OK</button>
     </div>
     <div class="login-error" id="loginError"></div>
+    <div style="text-align:center;margin-top:12px;"><button onclick="forgotPin()" style="background:none;border:none;font-size:12px;color:var(--ink3);cursor:pointer;font-family:'Inter',sans-serif;text-decoration:underline;">Forgot PIN?</button></div>
   </div>
 </div>
 
@@ -403,6 +466,57 @@ var SAMPLES = [
   {title:'Update CV and apply to 3 jobs',description:'Target McKinsey, Safaricom Graduate Programme, and KCB Management Trainee.',space:'nyagah',owner_id:NYAGAH_ID,priority:'high',due_date:'2026-06-10',points:35},
   {title:'Fix the gate lock',description:'The main gate padlock is broken. Get a new one from the hardware on Ngong Rd.',space:'shared',owner_id:MUM_ID,priority:'low',due_date:'2026-06-25',points:15}
 ];
+
+
+function updateThemePill() {
+  var pill = document.getElementById('themePill');
+  var label = document.getElementById('themeLabel');
+  if (pill) pill.classList.toggle('on', isLight);
+  if (label) label.textContent = isLight ? 'Currently light' : 'Currently dark';
+}
+
+var originalToggleTheme = toggleTheme;
+function toggleTheme() {
+  isLight = !isLight;
+  localStorage.setItem('familio_theme', isLight ? 'light' : 'dark');
+  applyTheme();
+  updateThemePill();
+}
+
+function changePin() {
+  var current = document.getElementById('currentPin').value;
+  var newP = document.getElementById('newPin').value;
+  var confirm = document.getElementById('confirmPin').value;
+  var errEl = document.getElementById('pinChangeError');
+  var okEl = document.getElementById('pinChangeSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (current !== PINS[CURRENT_USER]) { errEl.textContent = 'Current PIN is wrong'; errEl.style.display = 'block'; return; }
+  if (newP.length !== 4 || isNaN(newP)) { errEl.textContent = 'New PIN must be 4 digits'; errEl.style.display = 'block'; return; }
+  if (newP !== confirm) { errEl.textContent = 'PINs do not match'; errEl.style.display = 'block'; return; }
+
+  PINS[CURRENT_USER] = newP;
+  document.getElementById('currentPin').value = '';
+  document.getElementById('newPin').value = '';
+  document.getElementById('confirmPin').value = '';
+  okEl.style.display = 'block';
+  setTimeout(function(){ okEl.style.display = 'none'; }, 3000);
+}
+
+async function forgotPin() {
+  if (!loginTarget) { alert('Please select your profile first'); return; }
+  var name = loginTarget === 'nyagah' ? 'Nyagah' : 'Mum';
+  var msg = encodeURIComponent(name + ' is requesting a PIN reset on Familio. Please help them log in.');
+  var url = 'https://wa.me/254740116371?text=' + msg;
+  window.open(url, '_blank');
+}
+
+function openSettings() {
+  document.getElementById('settingsUserName').textContent = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
+  updateThemePill();
+  document.getElementById('settingsModal').classList.add('show');
+}
 
 function applyTheme() {
   if (isLight) { document.body.classList.add('light'); document.getElementById('themeBtn').innerHTML = '<i class="ti ti-moon" style="font-size:13px"></i>'; }
@@ -465,7 +579,7 @@ function applyUserContext() {
   var myName = isNyagah ? 'Nyagah' : 'Mum';
   var theirName = isNyagah ? 'Mum' : 'Nyagah';
   document.getElementById('currentUserLabel').textContent = myName;
-  document.getElementById('logoutBtn').style.display = 'flex';
+  document.getElementById('settingsBtn').style.display = 'flex';
   document.getElementById('myAvatar').textContent = isNyagah ? 'N' : 'M';
   document.getElementById('myAvatar').className = 'avatar ' + (isNyagah ? 'avatar-n' : 'avatar-m');
   document.getElementById('myName').textContent = myName;
@@ -476,19 +590,7 @@ function applyUserContext() {
   // Update tab labels
   document.getElementById('tab-me').childNodes[0].textContent = 'Mine ';
   document.getElementById('tab-them').childNodes[0].textContent = theirName + ' ';
-  // Update add modal owner default
-  var ownerSel = document.getElementById('newOwner');
-  ownerSel.options[0].value = NYAGAH_ID;
-  ownerSel.options[0].text = 'Nyagah';
-  ownerSel.options[1].value = MUM_ID;
-  ownerSel.options[1].text = 'Mum';
-  ownerSel.value = MY_ID;
-  // Update space options
-  var spaceSel = document.getElementById('newSpace');
-  spaceSel.options[1].value = 'nyagah';
-  spaceSel.options[1].text = 'Nyagah only';
-  spaceSel.options[2].value = 'mum';
-  spaceSel.options[2].text = 'Mum only';
+
 }
 
 function logout() {
@@ -500,7 +602,7 @@ function logout() {
   document.getElementById('pinSection').style.display = 'none';
   document.getElementById('loginError').textContent = '';
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('settingsBtn').style.display = 'none';
 }
 
 // CONFETTI
@@ -733,7 +835,7 @@ function renderTasks() {
       (!isPrivate?'<span class="chip chip-'+task.priority+'">'+task.priority.charAt(0).toUpperCase()+task.priority.slice(1)+'</span>':'')+
       (isPrivate?'<span class="chip chip-private">Private</span>':'')+
       '</div><div class="task-right">'+
-      (!isPrivate?'<span class="due-text '+(overdue?'overdue':'')+'">'+( overdue?'Overdue':dueStr)+'</span>':'')+
+      (!isPrivate?(overdue && isOwner?'<span class="due-text overdue">Overdue</span><button onclick="rescheduleTask(\''+task.id+'\')" style="font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);border:1px solid rgba(200,135,58,0.3);border-radius:6px;padding:2px 7px;cursor:pointer;font-family:Inter,sans-serif;">Reschedule</button>':'<span class="due-text '+(overdue?'overdue':'')+'">'+( overdue?'Overdue':dueStr)+'</span>'):'')+
       '<span class="pts-text">+'+(task.points||20)+'</span>'+
       '</div></div>'+
       actionsHtml + resHtml + '</div>';
@@ -800,7 +902,48 @@ async function changeStatus(id, status) {
   await fetchTasks();
 }
 
+var reschedulingTaskId = null;
+
+function rescheduleTask(id) {
+  reschedulingTaskId = id;
+  document.getElementById('rescheduleDate').value = '';
+  document.getElementById('rescheduleModal').classList.add('show');
+}
+
+async function confirmReschedule() {
+  var newDate = document.getElementById('rescheduleDate').value;
+  if (!newDate) return;
+  try {
+    await fetch(API+'/tasks/'+reschedulingTaskId+'/status', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({due_date: newDate, owner_id: MY_ID})
+    });
+    document.getElementById('rescheduleModal').classList.remove('show');
+    await fetchTasks();
+  } catch(e) { console.error(e); }
+}
+
 async function deleteTask(id) { await fetch(API+'/tasks/'+id,{method:'DELETE'}); await fetchTasks(); }
+
+async function sendReminders() {
+  var btn = document.getElementById('reminderBtn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  try {
+    var res = await fetch(API+'/reminders/run', {method:'POST'});
+    var data = await res.json();
+    if (data.success && data.sent > 0) {
+      btn.textContent = 'Sent!';
+      btn.style.color = 'var(--green)';
+    } else {
+      btn.textContent = 'Nothing due';
+    }
+  } catch(e) {
+    btn.textContent = 'Failed';
+  }
+  setTimeout(function(){ btn.textContent = 'Remind me'; btn.disabled = false; }, 3000);
+}
 
 async function clearCompleted() {
   var doneTasks = tasks.filter(function(t){ return t.status==='done' && t.owner_id===MY_ID; });

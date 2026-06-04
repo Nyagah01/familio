@@ -65,12 +65,13 @@ router.post('/', async (req, res) => {
   res.status(201).json(data);
 });
 
-// PATCH update task status
+// PATCH update task status and/or due date
 router.patch('/:id/status', async (req, res) => {
-  const { status, owner_id } = req.body;
+  const { status, owner_id, due_date } = req.body;
 
-  const updates = { status };
-  if (status === 'done') updates.completed_at = new Date().toISOString();
+  const updates = {};
+  if (status) { updates.status = status; if (status === 'done') updates.completed_at = new Date().toISOString(); }
+  if (due_date) updates.due_date = due_date;
 
   const { data, error } = await supabase
     .from('tasks')
