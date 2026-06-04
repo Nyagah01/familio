@@ -97,6 +97,34 @@ router.patch('/:id/status', async (req, res) => {
   res.json(data);
 });
 
+// PATCH edit task details
+router.patch('/:id/edit', async (req, res) => {
+  const { title, description, due_date, priority } = req.body;
+  try {
+    const updates = {};
+    if (title) updates.title = title;
+    if (description !== undefined) updates.description = description;
+    if (due_date) updates.due_date = due_date;
+    if (priority) updates.priority = priority;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Clear research when task is edited
+    await supabase.from('task_research').delete().eq('task_id', req.params.id);
+
+    res.json({ success: true, task: data });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // DELETE task
 router.delete('/:id', async (req, res) => {
   const { error } = await supabase.from('tasks').delete().eq('id', req.params.id);

@@ -392,6 +392,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 </div>
 
 
+
+<!-- EDIT TASK MODAL -->
+<div id="editModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit task</div>
+      <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('show')">×</button>
+    </div>
+    <div class="form-field"><label class="form-label">What needs doing</label><input class="form-input" id="editTitle" placeholder="Task title..."/></div>
+    <div class="form-field"><label class="form-label">Details</label><textarea class="form-textarea" id="editDesc" placeholder="Any extra context..."></textarea></div>
+    <div class="form-field">
+      <label class="form-label">Due date <span style="color:#E05A4A">*</span></label>
+      <input class="form-input" type="date" id="editDue" style="width:100%;cursor:pointer;"/>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Priority</label>
+      <select class="form-select" id="editPriority">
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div id="editError" style="font-size:11px;color:#E05A4A;display:none;margin-bottom:8px;"></div>
+    <button onclick="saveEdit()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save changes</button>
+  </div>
+</div>
+
 <!-- RESCHEDULE MODAL -->
 <div id="rescheduleModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal">
@@ -897,7 +924,7 @@ function renderTasks() {
 
     return '<div class="task-card '+(isDone?'done':'')+'" id="tc-'+task.id+'">'+
       '<div class="task-top"><div style="flex:1"><div class="task-title '+(isDone?'strikethrough':'')+' '+(isPrivate?'blurred':'')+'">'+( isPrivate?'Private task':task.title)+'</div></div>'+
-      ((!isPrivate && isOwner)?'<button class="delete-btn" onclick="deleteTask(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
+      ((!isPrivate && isOwner)?'<button class="delete-btn" onclick="openEdit(\''+task.id+'\')"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="delete-btn" onclick="deleteTask(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
       '</div>'+
       (task.description&&!isPrivate?'<div class="task-desc">'+task.description+'</div>':'')+
       (isPrivate?'<div class="task-desc blurred">Working on something personal</div>':'')+
@@ -972,6 +999,56 @@ async function triggerResearch(taskId) {
 async function changeStatus(id, status) {
   await fetch(API+'/tasks/'+id+'/status',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status,owner_id:MY_ID})});
   await fetchTasks();
+}
+
+var editingTaskId = null;
+
+function openEdit(id) {
+  var task = null;
+  for (var i=0;i<tasks.length;i++) { if (tasks[i].id===id) { task=tasks[i]; break; } }
+  if (!task) return;
+  editingTaskId = id;
+  document.getElementById('editTitle').value = task.title || '';
+  document.getElementById('editDesc').value = task.description || '';
+  document.getElementById('editDue').value = task.due_date ? task.due_date.split('T')[0] : '';
+  document.getElementById('editPriority').value = task.priority || 'medium';
+  document.getElementById('editError').style.display = 'none';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function saveEdit() {
+  var title = document.getElementById('editTitle').value.trim();
+  var due = document.getElementById('editDue').value;
+  if (!title || !due) {
+    document.getElementById('editError').textContent = 'Title and due date are required';
+    document.getElementById('editError').style.display = 'block';
+    return;
+  }
+  fetch(API+'/tasks/'+editingTaskId+'/edit', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      title: title,
+      description: document.getElementById('editDesc').value,
+      due_date: due,
+      priority: document.getElementById('editPriority').value,
+      owner_id: MY_ID
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.success) {
+      document.getElementById('editModal').classList.remove('show');
+      fetchTasks();
+    } else {
+      document.getElementById('editError').textContent = data.error || 'Failed to save';
+      document.getElementById('editError').style.display = 'block';
+    }
+  })
+  .catch(function(){
+    document.getElementById('editError').textContent = 'Connection error';
+    document.getElementById('editError').style.display = 'block';
+  });
 }
 
 var reschedulingTaskId = null;
