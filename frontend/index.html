@@ -368,6 +368,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
       </div>
     </div>
 
+    <!-- Reset Mum PIN - only for Nyagah -->
+    <div id="resetPinSection" style="display:none;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Reset Mum's PIN</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input class="form-input" type="password" id="mumNewPin" placeholder="New PIN for Mum (4 digits)" maxlength="4" inputmode="numeric"/>
+        <input class="form-input" type="password" id="mumConfirmPin" placeholder="Confirm new PIN" maxlength="4" inputmode="numeric"/>
+        <div id="resetPinError" style="font-size:11px;color:#E05A4A;display:none;"></div>
+        <div id="resetPinSuccess" style="font-size:11px;color:var(--green);display:none;">Mum's PIN updated!</div>
+        <button onclick="resetMumPin()" style="padding:11px;background:var(--surface2);color:var(--ink2);border:1px solid var(--border);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Update Mum's PIN</button>
+      </div>
+    </div>
+
     <!-- Account info -->
     <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;">
       <div>
@@ -439,7 +451,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 var API = 'https://familio-backend-production.up.railway.app';
 var NYAGAH_ID = '00000000-0000-0000-0000-000000000001';
 var MUM_ID = '00000000-0000-0000-0000-000000000002';
-var PINS = {nyagah:'7890', mum:'0987'};
+var PINS = {}; // PINs now verified via backend
 var CURRENT_USER = null;
 var MY_ID = null;
 var THEIR_ID = null;
@@ -483,7 +495,7 @@ function toggleTheme() {
   updateThemePill();
 }
 
-function changePin() {
+async function changePin() {
   var current = document.getElementById('currentPin').value;
   var newP = document.getElementById('newPin').value;
   var confirm = document.getElementById('confirmPin').value;
@@ -492,16 +504,30 @@ function changePin() {
   errEl.style.display = 'none';
   okEl.style.display = 'none';
 
-  if (current !== PINS[CURRENT_USER]) { errEl.textContent = 'Current PIN is wrong'; errEl.style.display = 'block'; return; }
   if (newP.length !== 4 || isNaN(newP)) { errEl.textContent = 'New PIN must be 4 digits'; errEl.style.display = 'block'; return; }
   if (newP !== confirm) { errEl.textContent = 'PINs do not match'; errEl.style.display = 'block'; return; }
 
-  PINS[CURRENT_USER] = newP;
-  document.getElementById('currentPin').value = '';
-  document.getElementById('newPin').value = '';
-  document.getElementById('confirmPin').value = '';
-  okEl.style.display = 'block';
-  setTimeout(function(){ okEl.style.display = 'none'; }, 3000);
+  try {
+    var res = await fetch(API+'/pins/change', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({user_id: MY_ID, current_pin: current, new_pin: newP})
+    });
+    var data = await res.json();
+    if (data.success) {
+      document.getElementById('currentPin').value = '';
+      document.getElementById('newPin').value = '';
+      document.getElementById('confirmPin').value = '';
+      okEl.style.display = 'block';
+      setTimeout(function(){ okEl.style.display = 'none'; }, 3000);
+    } else {
+      errEl.textContent = data.error || 'Something went wrong';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error';
+    errEl.style.display = 'block';
+  }
 }
 
 async function forgotPin() {
@@ -512,8 +538,35 @@ async function forgotPin() {
   window.open(url, '_blank');
 }
 
+async function resetMumPin() {
+  var newP = document.getElementById('mumNewPin').value;
+  var confirm = document.getElementById('mumConfirmPin').value;
+  var errEl = document.getElementById('resetPinError');
+  var okEl = document.getElementById('resetPinSuccess');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (newP.length !== 4 || isNaN(newP)) { errEl.textContent = 'PIN must be 4 digits'; errEl.style.display = 'block'; return; }
+  if (newP !== confirm) { errEl.textContent = 'PINs do not match'; errEl.style.display = 'block'; return; }
+  try {
+    var res = await fetch(API+'/pins/reset', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({admin_id: NYAGAH_ID, target_user_id: MUM_ID, new_pin: newP})
+    });
+    var data = await res.json();
+    if (data.success) {
+      document.getElementById('mumNewPin').value = '';
+      document.getElementById('mumConfirmPin').value = '';
+      okEl.style.display = 'block';
+      setTimeout(function(){ okEl.style.display = 'none'; }, 3000);
+    } else {
+      errEl.textContent = data.error || 'Failed'; errEl.style.display = 'block';
+    }
+  } catch(e) { errEl.textContent = 'Connection error'; errEl.style.display = 'block'; }
+}
+
 function openSettings() {
   document.getElementById('settingsUserName').textContent = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
+  document.getElementById('resetPinSection').style.display = CURRENT_USER === 'nyagah' ? 'block' : 'none';
   updateThemePill();
   document.getElementById('settingsModal').classList.add('show');
 }
@@ -552,23 +605,39 @@ function updatePinDots() {
   for (var i=0;i<4;i++) document.getElementById('pd'+i).classList.toggle('filled', i < pinBuffer.length);
 }
 
-function checkPin() {
+async function checkPin() {
   if (!loginTarget || pinBuffer.length < 4) return;
-  if (pinBuffer === PINS[loginTarget]) {
-    CURRENT_USER = loginTarget;
-    MY_ID = loginTarget === 'nyagah' ? NYAGAH_ID : MUM_ID;
-    THEIR_ID = loginTarget === 'nyagah' ? MUM_ID : NYAGAH_ID;
-    localStorage.setItem('familio_user', CURRENT_USER);
-    document.getElementById('loginScreen').style.display = 'none';
-    applyUserContext();
-    activeSpace = 'me';
-    setSpace('me');
-    vibeLogs = [];
-    renderVibesLog();
-    fetchTasks().then(function(){ seedSampleTasks(); });
-    fetchVibes();
-  } else {
-    document.getElementById('loginError').textContent = 'Wrong PIN, try again';
+  var userId = loginTarget === 'nyagah' ? NYAGAH_ID : MUM_ID;
+  document.getElementById('loginError').textContent = 'Checking...';
+  try {
+    var res = await fetch(API+'/pins/verify', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({user_id: userId, pin: pinBuffer})
+    });
+    var data = await res.json();
+    if (data.valid) {
+      CURRENT_USER = loginTarget;
+      MY_ID = userId;
+      THEIR_ID = loginTarget === 'nyagah' ? MUM_ID : NYAGAH_ID;
+      localStorage.setItem('familio_user', CURRENT_USER);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('loginError').textContent = '';
+      applyUserContext();
+      activeSpace = 'me';
+      setSpace('me');
+      vibeLogs = [];
+      renderVibesLog();
+      fetchTasks().then(function(){ seedSampleTasks(); });
+      fetchVibes();
+      setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); } }, 30000);
+    } else {
+      document.getElementById('loginError').textContent = 'Wrong PIN, try again';
+      pinBuffer = '';
+      updatePinDots();
+    }
+  } catch(e) {
+    document.getElementById('loginError').textContent = 'Connection error, try again';
     pinBuffer = '';
     updatePinDots();
   }
