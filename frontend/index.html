@@ -201,7 +201,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
     <div class="wordmark">Fami<span>lio</span></div>
     <div class="header-controls">
       <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" style="display:none"></button>
-      <button class="theme-btn" onclick="openSettings()" style="display:none" id="settingsBtn"><i class="ti ti-settings" style="font-size:13px"></i></button>
+      <button class="theme-btn" onclick="openProfile()" style="display:none" id="profileBtn"><i class="ti ti-profile" style="font-size:13px"></i></button>
       <button class="logout-btn" id="logoutBtn" onclick="logout()" style="display:none"><span id="currentUserLabel"></span></button>
     </div>
   </div>
@@ -333,11 +333,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 
 
 <!-- SETTINGS MODAL -->
-<div id="settingsModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+<div id="profileModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Settings</div>
-      <button class="modal-close" onclick="document.getElementById('settingsModal').classList.remove('show')">×</button>
+      <div class="modal-title">Profile</div>
+      <button class="modal-close" onclick="document.getElementById('profileModal').classList.remove('show')">×</button>
     </div>
 
     <!-- Theme toggle -->
@@ -383,15 +383,42 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
     <!-- Account info -->
     <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <div style="font-size:13px;font-weight:500;color:var(--ink)" id="settingsUserName">Nyagah</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink)" id="profileUserName">Nyagah</div>
         <div style="font-size:11px;color:var(--ink3)">Logged in</div>
       </div>
-      <button onclick="document.getElementById('settingsModal').classList.remove('show');logout();" style="font-size:11px;color:#E05A4A;background:none;border:1px solid rgba(224,90,74,0.3);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Sign out</button>
+      <button onclick="document.getElementById('profileModal').classList.remove('show');logout();" style="font-size:11px;color:#E05A4A;background:none;border:1px solid rgba(224,90,74,0.3);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Inter',sans-serif;">Sign out</button>
     </div>
   </div>
 </div>
 
 
+
+
+<!-- CANCEL TASK MODAL -->
+<div id="cancelModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cancel task</div>
+      <button class="modal-close" onclick="document.getElementById('cancelModal').classList.remove('show')">×</button>
+    </div>
+    <div id="cancelWarning" style="background:var(--amber-light);border:1px solid rgba(186,117,23,0.3);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;font-size:13px;color:#E8A020;line-height:1.5;"></div>
+    <div id="cancelReasonSection">
+      <div class="form-field">
+        <label class="form-label">Reason (optional)</label>
+        <textarea class="form-textarea" id="cancelReason" placeholder="Why are you cancelling this?"></textarea>
+      </div>
+      <button id="cancelConfirmBtn" onclick="confirmCancel()" style="width:100%;padding:13px;background:#C0392B;color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Cancel task (-5 pts)</button>
+    </div>
+    <div id="cancelBlockedSection" style="display:none;">
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:32px;margin-bottom:8px;">😬</div>
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px;">Oops, low on points!</div>
+        <div style="font-size:13px;color:var(--ink2);line-height:1.6;">You need at least 5 points to cancel a task. Get some tasks done first 💪</div>
+      </div>
+      <button onclick="document.getElementById('cancelModal').classList.remove('show')" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Got it</button>
+    </div>
+  </div>
+</div>
 
 <!-- EDIT TASK MODAL -->
 <div id="editModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
@@ -591,11 +618,11 @@ async function resetMumPin() {
   } catch(e) { errEl.textContent = 'Connection error'; errEl.style.display = 'block'; }
 }
 
-function openSettings() {
-  document.getElementById('settingsUserName').textContent = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
+function openProfile() {
+  document.getElementById('profileUserName').textContent = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
   document.getElementById('resetPinSection').style.display = CURRENT_USER === 'nyagah' ? 'block' : 'none';
   updateThemePill();
-  document.getElementById('settingsModal').classList.add('show');
+  document.getElementById('profileModal').classList.add('show');
 }
 
 function applyTheme() {
@@ -678,7 +705,7 @@ function applyUserContext() {
   var myName = isNyagah ? 'Nyagah' : 'Mum';
   var theirName = isNyagah ? 'Mum' : 'Nyagah';
   document.getElementById('currentUserLabel').textContent = myName;
-  document.getElementById('settingsBtn').style.display = 'flex';
+  document.getElementById('profileBtn').style.display = 'flex';
   document.getElementById('myAvatar').textContent = isNyagah ? 'N' : 'M';
   document.getElementById('myAvatar').className = 'avatar ' + (isNyagah ? 'avatar-n' : 'avatar-m');
   document.getElementById('myName').textContent = myName;
@@ -701,7 +728,7 @@ function logout() {
   document.getElementById('pinSection').style.display = 'none';
   document.getElementById('loginError').textContent = '';
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('settingsBtn').style.display = 'none';
+  document.getElementById('profileBtn').style.display = 'none';
 }
 
 // CONFETTI
@@ -854,15 +881,19 @@ function renderScores() {
   var theirTasks = getTasksForUser(THEIR_ID);
   var myDone = myTasks.filter(function(t){return t.status==='done';});
   var theirDone = theirTasks.filter(function(t){return t.status==='done';});
-  var myPts = myDone.reduce(function(a,t){return a+(t.points||20);},0);
-  var theirPts = theirDone.reduce(function(a,t){return a+(t.points||20);},0);
+  var myCancelled = tasks.filter(function(t){return t.owner_id===MY_ID&&t.status==='cancelled';});
+  var theirCancelled = tasks.filter(function(t){return t.owner_id===THEIR_ID&&t.status==='cancelled';});
+  var myDeductions = myCancelled.reduce(function(a,t){return a+(t.points_deducted||0);},0);
+  var theirDeductions = theirCancelled.reduce(function(a,t){return a+(t.points_deducted||0);},0);
+  var myPts = Math.max(0, myDone.reduce(function(a,t){return a+(t.points||20);},0) - myDeductions);
+  var theirPts = Math.max(0, theirDone.reduce(function(a,t){return a+(t.points||20);},0) - theirDeductions);
   document.getElementById('myPts').textContent=myPts;
   document.getElementById('myDone').textContent=myDone.length;
-  document.getElementById('myLeft').textContent=myTasks.length-myDone.length;
+  document.getElementById('myLeft').textContent=myTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
   document.getElementById('myMeta').textContent=myTasks.length+' task'+(myTasks.length!==1?'s':'');
   document.getElementById('theirPts').textContent=theirPts;
   document.getElementById('theirDone').textContent=theirDone.length;
-  document.getElementById('theirLeft').textContent=theirTasks.length-theirDone.length;
+  document.getElementById('theirLeft').textContent=theirTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
   document.getElementById('theirMeta').textContent=theirTasks.length+' task'+(theirTasks.length!==1?'s':'');
   var theirName2 = CURRENT_USER==='nyagah'?'Mum':'Nyagah'; var txt = myPts===0&&theirPts===0 ? 'No tasks done yet' : myPts===theirPts ? 'It is a tie!' : myPts>theirPts ? 'You are leading' : theirName2+' is leading';
   document.getElementById('leaderName').textContent = txt;
@@ -912,9 +943,11 @@ function renderTasks() {
     }
 
     var actionsHtml = '';
-    if (!isPrivate && isOwner) {
-      if (isDone) {
-        actionsHtml = '<div class="task-actions"><button class="done-btn already-done"><i class="ti ti-check" style="font-size:13px"></i> Done</button><select class="status-select" onchange="changeStatus(\''+task.id+'\',this.value)"><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="done" selected>Done</option></select></div>';
+    var isShared = task.space === 'shared';
+    var canAct = !isPrivate && (isOwner || isShared);
+    if (canAct) {
+      if (isDone || task.status === 'cancelled') {
+        actionsHtml = '<div class="task-actions"><button class="done-btn already-done"><i class="ti ti-check" style="font-size:13px"></i> ' + (task.status==='cancelled'?'Cancelled':'Done') + '</button></div>';
       } else {
         actionsHtml = '<div class="task-actions"><button class="done-btn" onclick="markDone(\''+task.id+'\')"><i class="ti ti-check" style="font-size:13px"></i> Mark done</button><select class="status-select" onchange="changeStatus(\''+task.id+'\',this.value)"><option value="pending" '+(task.status==='pending'?'selected':'')+'>Pending</option><option value="in_progress" '+(task.status==='in_progress'?'selected':'')+'>In progress</option><option value="done">Done</option></select></div>';
       }
@@ -924,10 +957,11 @@ function renderTasks() {
 
     return '<div class="task-card '+(isDone?'done':'')+'" id="tc-'+task.id+'">'+
       '<div class="task-top"><div style="flex:1"><div class="task-title '+(isDone?'strikethrough':'')+' '+(isPrivate?'blurred':'')+'">'+( isPrivate?'Private task':task.title)+'</div></div>'+
-      ((!isPrivate && isOwner)?'<button class="delete-btn" onclick="openEdit(\''+task.id+'\')"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="delete-btn" onclick="deleteTask(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
+      ((!isPrivate && isOwner)?'<button class="delete-btn" onclick="openEdit(\''+task.id+'\')"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="delete-btn" onclick="openCancel(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
       '</div>'+
       (task.description&&!isPrivate?'<div class="task-desc">'+task.description+'</div>':'')+
       (isPrivate?'<div class="task-desc blurred">Working on something personal</div>':'')+
+      (task.status==='cancelled'&&task.cancel_reason?'<div class="cancel-reason">Cancelled: '+task.cancel_reason+'</div>':'')+
       '<div class="task-meta"><div class="task-left">'+
       '<div class="avatar '+aCls+'" style="width:22px;height:22px;font-size:10px">'+aLetter+'</div>'+
       '<span class="chip chip-'+task.status+'">'+sLabel+'</span>'+
@@ -1041,6 +1075,49 @@ function saveEdit() {
     document.getElementById('editError').textContent = 'Connection error';
     document.getElementById('editError').style.display = 'block';
   });
+}
+
+var cancellingTaskId = null;
+
+function openCancel(id) {
+  var task = null;
+  for (var i=0;i<tasks.length;i++) { if (tasks[i].id===id) { task=tasks[i]; break; } }
+  if (!task) return;
+  cancellingTaskId = id;
+  var isShared = task.space === 'shared';
+  document.getElementById('cancelReason').value = '';
+  document.getElementById('cancelBlockedSection').style.display = 'none';
+  document.getElementById('cancelReasonSection').style.display = 'block';
+
+  if (isShared) {
+    document.getElementById('cancelWarning').textContent = 'This is a shared task. Cancelling will not cost any points.';
+    document.getElementById('cancelConfirmBtn').textContent = 'Cancel task';
+  } else {
+    document.getElementById('cancelWarning').textContent = 'Cancelling this task will cost you 5 points. Make sure you really want to do this.';
+    document.getElementById('cancelConfirmBtn').textContent = 'Cancel task (-5 pts)';
+  }
+  document.getElementById('cancelModal').classList.add('show');
+}
+
+function confirmCancel() {
+  var reason = document.getElementById('cancelReason').value.trim();
+  fetch(API+'/tasks/'+cancellingTaskId+'/cancel', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({reason: reason, cancelled_by: MY_ID})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.blocked) {
+      document.getElementById('cancelReasonSection').style.display = 'none';
+      document.getElementById('cancelBlockedSection').style.display = 'block';
+      document.getElementById('cancelWarning').style.display = 'none';
+    } else if (data.success) {
+      document.getElementById('cancelModal').classList.remove('show');
+      fetchTasks();
+    }
+  })
+  .catch(function(e){ console.error(e); });
 }
 
 var reschedulingTaskId = null;

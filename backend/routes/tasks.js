@@ -125,6 +125,64 @@ router.patch('/:id/edit', async (req, res) => {
   }
 });
 
+// PATCH cancel task with reason and points deduction
+router.patch('/:id/cancel', async (req, res) => {
+  const { reason, cancelled_by } = req.body;
+  const NYAGAH_ID = '00000000-0000-0000-0000-000000000001';
+  const MUM_ID = '00000000-0000-0000-0000-000000000002';
+
+  try {
+    // Get current task
+    const { data: task, error: taskError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (taskError || !task) throw new Error('Task not found');
+
+    // Get canceller current points
+    const allTasks = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('owner_id', cancelled_by)
+      .eq('status', 'done');
+
+    const sharedDone = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('space', 'shared')
+      .eq('status', 'done');
+
+    const myPoints = (allTasks.data || []).reduce((a, t) => a + (t.points || 20), 0) +
+                     (sharedDone.data || []).reduce((a, t) => a + (t.points || 20), 0);
+
+    // Deduct 5 points only for personal tasks, not shared
+    const isShared = task.space === 'shared';
+    const deduct = isShared ? 0 : 5;
+
+    if (!isShared && myPoints < 5) {
+      return res.json({ success: false, blocked: true, message: 'Not enough points to cancel' });
+    }
+
+    // Update task to cancelled
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        status: 'cancelled',
+        cancel_reason: reason || '',
+        points_deducted: deduct
+      })
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+
+    res.json({ success: true, deducted: deduct });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // DELETE task
 router.delete('/:id', async (req, res) => {
   const { error } = await supabase.from('tasks').delete().eq('id', req.params.id);
