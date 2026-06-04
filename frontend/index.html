@@ -986,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderVibesLog();
     fetchTasks().then(function(){ seedSampleTasks(); });
     fetchVibes();
-    fetchVibes();
+    setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); } }, 30000);
   }
 });
 </script>
