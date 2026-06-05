@@ -59,7 +59,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 /* TASKS */
 .task-list{padding:8px 20px 16px;display:flex;flex-direction:column;gap:8px;}
 .task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding
-.task-card.priority-high{border-left:3px solid #E05A4A;}:14px 16px;transition:opacity 0.3s;}
+.task-card.priority-high{border-left:3px solid #E05A4A;padding-left:18px;}
+.task-card.overdue-card{border-left:3px solid #E05A4A;background:rgba(192,57,43,0.04);padding-left:18px;}:14px 16px;transition:opacity 0.3s;}
 .task-card.done{opacity:0.5;}
 .task-card.celebrating{animation:celebrate 0.5s ease;}
 @keyframes celebrate{0%{transform:scale(1);}30%{transform:scale(1.03);}60%{transform:scale(0.98);}100%{transform:scale(1);}}
@@ -977,7 +978,7 @@ function renderTasks() {
       '<div class="task-meta"><div class="task-left">'+
       '<div class="avatar '+aCls+'" style="width:22px;height:22px;font-size:10px">'+aLetter+'</div>'+
       '<span class="chip chip-'+task.status+'">'+sLabel+'</span>'+
-      (!isPrivate?'<span class="chip chip-'+effectivePriority+'">'+effectivePriority.charAt(0).toUpperCase()+effectivePriority.slice(1)+'</span>':'')+
+      (!isPrivate&&!overdue?'<span class="chip chip-'+effectivePriority+'">'+effectivePriority.charAt(0).toUpperCase()+effectivePriority.slice(1)+'</span>':'')+
       (isPrivate?'<span class="chip chip-private">Private</span>':'')+
       '</div><div class="task-right">'+
       (!isPrivate?(overdue && isOwner?'<span class="due-text overdue">Overdue</span><button onclick="rescheduleTask(\''+task.id+'\')" style="font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);border:1px solid rgba(200,135,58,0.3);border-radius:6px;padding:2px 7px;cursor:pointer;font-family:Inter,sans-serif;">Reschedule</button>':'<span class="due-text '+(overdue?'overdue':'')+'">'+( overdue?'Overdue':dueStr)+'</span>'):'')+
