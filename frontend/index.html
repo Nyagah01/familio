@@ -609,6 +609,7 @@ async function forgotPin() {
 }
 
 var historyData = {my: [], shared: []};
+var persistentScores = {};
 var activeHistoryTab = 'my';
 
 async function loadHistory() {
@@ -799,7 +800,7 @@ function checkPin() {
       renderVibesLog();
       fetchTasks();
       fetchVibes();
-      setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); } }, 30000);
+      setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); fetchScores(); } }, 30000);
     } else {
       document.getElementById('loginError').textContent = 'Wrong PIN, try again';
       pinBuffer = '';
@@ -996,12 +997,9 @@ function renderScores() {
   var theirTasks = getTasksForUser(THEIR_ID);
   var myDone = myTasks.filter(function(t){return t.status==='done';});
   var theirDone = theirTasks.filter(function(t){return t.status==='done';});
-  var myCancelled = tasks.filter(function(t){return t.owner_id===MY_ID&&t.status==='cancelled';});
-  var theirCancelled = tasks.filter(function(t){return t.owner_id===THEIR_ID&&t.status==='cancelled';});
-  var myDeductions = myCancelled.reduce(function(a,t){return a+(t.points_deducted||0);},0);
-  var theirDeductions = theirCancelled.reduce(function(a,t){return a+(t.points_deducted||0);},0);
-  var myPts = Math.max(0, myDone.reduce(function(a,t){return a+(t.points||20);},0) - myDeductions);
-  var theirPts = Math.max(0, theirDone.reduce(function(a,t){return a+(t.points||20);},0) - theirDeductions);
+  // Use persistent scores if available, fall back to counting tasks
+  var myPts = persistentScores[MY_ID] !== undefined ? persistentScores[MY_ID] : Math.max(0, myDone.reduce(function(a,t){return a+(t.points||20);},0));
+  var theirPts = persistentScores[THEIR_ID] !== undefined ? persistentScores[THEIR_ID] : Math.max(0, theirDone.reduce(function(a,t){return a+(t.points||20);},0));
   document.getElementById('myPts').textContent=myPts;
   document.getElementById('myDone').textContent=myDone.length;
   document.getElementById('myLeft').textContent=myTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
@@ -1106,6 +1104,17 @@ async function markDone(id) {
   if (card) card.classList.add('celebrating');
   await changeStatus(id, 'done');
   fireConfetti();
+}
+
+async function fetchScores() {
+  try {
+    var res = await fetch(API+'/tasks/scores');
+    var data = await res.json();
+    data.forEach(function(u) {
+      persistentScores[u.id] = Math.max(0, (u.earned_points||0) - (u.deducted_points||0));
+    });
+    renderScores();
+  } catch(e) { console.error('Scores fetch error:', e); }
 }
 
 async function fetchVibes() {
@@ -1328,7 +1337,8 @@ document.addEventListener('DOMContentLoaded', function() {
     renderVibesLog();
     fetchTasks();
     fetchVibes();
-    setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); } }, 30000);
+    fetchScores();
+    setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); fetchScores(); } }, 30000);
   }
 });
 </script>

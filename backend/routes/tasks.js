@@ -65,6 +65,21 @@ router.post('/', async (req, res) => {
   res.status(201).json(data);
 });
 
+
+// GET /tasks/scores - get persistent points for both users
+router.get('/scores', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, earned_points, deducted_points')
+      .in('id', ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']);
+    if (error) throw error;
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // PATCH update task status and/or due date
 router.patch('/:id/status', async (req, res) => {
   const { status, owner_id, due_date } = req.body;
