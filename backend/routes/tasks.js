@@ -70,8 +70,23 @@ router.patch('/:id/status', async (req, res) => {
   const { status, owner_id, due_date } = req.body;
 
   const updates = {};
-  if (status) { updates.status = status; if (status === 'done') updates.completed_at = new Date().toISOString(); }
+  if (status) { 
+    updates.status = status; 
+    if (status === 'done') updates.completed_at = new Date().toISOString(); 
+  }
   if (due_date) updates.due_date = due_date;
+
+  // Track points independently when marking done
+  if (status === 'done' && owner_id) {
+    try {
+      const { data: task } = await supabase.from('tasks').select('points, status').eq('id', req.params.id).single();
+      if (task && task.status !== 'done') {
+        const pts = task.points || 20;
+        const { data: user } = await supabase.from('users').select('earned_points').eq('id', owner_id).single();
+        await supabase.from('users').update({ earned_points: (user?.earned_points || 0) + pts }).eq('id', owner_id);
+      }
+    } catch(e) { console.error('Points tracking error:', e.message); }
+  }
 
   const { data, error } = await supabase
     .from('tasks')
@@ -176,6 +191,14 @@ router.patch('/:id/cancel', async (req, res) => {
       .eq('id', req.params.id);
 
     if (error) throw error;
+
+    // Track deducted points independently
+    if (deduct > 0 && cancelled_by) {
+      try {
+        const { data: user } = await supabase.from('users').select('deducted_points').eq('id', cancelled_by).single();
+        await supabase.from('users').update({ deducted_points: (user?.deducted_points || 0) + deduct }).eq('id', cancelled_by);
+      } catch(e) { console.error('Deduction tracking:', e.message); }
+    }
 
     res.json({ success: true, deducted: deduct });
   } catch(e) {

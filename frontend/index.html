@@ -369,6 +369,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
       </div>
     </div>
 
+    <!-- History -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;">Task History</div>
+        <button onclick="downloadHistoryPDF()" id="pdfBtn" style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-light);border:1px solid rgba(200,135,58,0.3);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;">View as PDF</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="showHistoryTab('my')" id="hist-tab-my" style="flex:1;padding:7px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Mine</button>
+        <button onclick="showHistoryTab('shared')" id="hist-tab-shared" style="flex:1;padding:7px;border:1px solid var(--border2);border-radius:8px;background:none;color:var(--ink3);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Shared</button>
+      </div>
+      <div id="historyList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;">
+        <div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Loading history...</div>
+      </div>
+    </div>
+
     <!-- Reset Mum PIN - only for Nyagah -->
     <div id="resetPinSection" style="display:none;margin-bottom:20px;">
       <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Reset Mum's PIN</div>
@@ -593,6 +608,102 @@ async function forgotPin() {
   window.open(url, '_blank');
 }
 
+var historyData = {my: [], shared: []};
+var activeHistoryTab = 'my';
+
+async function loadHistory() {
+  try {
+    var res = await fetch(API+'/history/'+MY_ID);
+    historyData = await res.json();
+    renderHistoryList();
+  } catch(e) {
+    document.getElementById('historyList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Could not load history</div>';
+  }
+}
+
+function showHistoryTab(tab) {
+  activeHistoryTab = tab;
+  document.getElementById('hist-tab-my').style.background = tab==='my' ? 'var(--accent)' : 'none';
+  document.getElementById('hist-tab-my').style.color = tab==='my' ? '#fff' : 'var(--ink3)';
+  document.getElementById('hist-tab-my').style.borderColor = tab==='my' ? 'var(--accent)' : 'var(--border2)';
+  document.getElementById('hist-tab-shared').style.background = tab==='shared' ? 'var(--accent)' : 'none';
+  document.getElementById('hist-tab-shared').style.color = tab==='shared' ? '#fff' : 'var(--ink3)';
+  document.getElementById('hist-tab-shared').style.borderColor = tab==='shared' ? 'var(--accent)' : 'var(--border2)';
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  var list = document.getElementById('historyList');
+  var items = activeHistoryTab === 'my' ? historyData.my : historyData.shared;
+  if (!items || !items.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">No history yet</div>';
+    return;
+  }
+  list.innerHTML = items.map(function(t) {
+    var dateStr = t.completed_at || t.updated_at;
+    var date = dateStr ? new Date(dateStr).toLocaleDateString('en-KE',{month:'short',day:'numeric',year:'numeric'}) : '';
+    var statusColor = t.status==='done' ? 'var(--green)' : '#E05A4A';
+    var statusLabel = t.status==='done' ? 'Done' : 'Cancelled';
+    var pts = t.status==='done' ? '+' + (t.points||20) + ' pts' : '-' + (t.points_deducted||0) + ' pts';
+    var ptsColor = t.status==='done' ? 'var(--accent)' : '#E05A4A';
+    return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">' +
+      '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:600;color:var(--ink);flex:1;margin-right:8px;">' + t.title + '</div>' +
+      '<span style="font-size:10px;font-weight:600;color:' + ptsColor + '">' + pts + '</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<span style="font-size:10px;font-weight:600;color:' + statusColor + '">' + statusLabel + '</span>' +
+      '<span style="font-size:10px;color:var(--ink3);">' + date + '</span>' +
+      '</div>' +
+      (t.cancel_reason ? '<div style="font-size:11px;color:#E05A4A;font-style:italic;margin-top:4px;">Reason: ' + t.cancel_reason + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function downloadHistoryPDF() {
+  var btn = document.getElementById('pdfBtn');
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+
+  var myName = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
+  var date = new Date().toLocaleDateString('en-KE',{month:'long',day:'numeric',year:'numeric'});
+
+  function taskRow(t) {
+    var dateStr = t.completed_at || t.updated_at;
+    var d = dateStr ? new Date(dateStr).toLocaleDateString('en-KE',{month:'short',day:'numeric',year:'numeric'}) : '';
+    var pts = t.status==='done' ? '+' + (t.points||20) : '-' + (t.points_deducted||0);
+    var color = t.status==='done' ? '#2D6A4F' : '#C0392B';
+    var statusLabel = t.status==='done' ? 'Done' : 'Cancelled';
+    return '<tr style="border-bottom:1px solid #eee;">' +
+      '<td style="padding:10px 8px;font-size:13px;color:#1a1209;">' + t.title + (t.cancel_reason ? '<br><span style="font-size:11px;color:#C0392B;font-style:italic;">Reason: ' + t.cancel_reason + '</span>' : '') + '</td>' +
+      '<td style="padding:10px 8px;font-size:12px;color:' + color + ';font-weight:600;">' + statusLabel + '</td>' +
+      '<td style="padding:10px 8px;font-size:12px;color:#666;">' + d + '</td>' +
+      '<td style="padding:10px 8px;font-size:12px;font-weight:700;color:' + color + ';text-align:right;">' + pts + ' pts</td>' +
+      '</tr>';
+  }
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<style>body{font-family:Georgia,serif;margin:40px;color:#1a1209;} h1{font-size:28px;color:#C8873A;margin:0;} h2{font-size:16px;color:#333;margin:24px 0 10px;border-bottom:2px solid #C8873A;padding-bottom:6px;} table{width:100%;border-collapse:collapse;} th{text-align:left;padding:10px 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#666;border-bottom:2px solid #eee;} .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;} .meta{font-size:13px;color:#666;margin-top:4px;} .empty{color:#999;font-size:13px;font-style:italic;padding:12px 0;}</style>' +
+    '</head><body>' +
+    '<div class="header"><div><h1>Familio</h1><div class="meta">Task History for ' + myName + '</div><div class="meta">Generated ' + date + '</div></div></div>' +
+    '<h2>My Tasks</h2>' +
+    (historyData.my.length ?
+      '<table><thead><tr><th>Task</th><th>Status</th><th>Date</th><th style="text-align:right">Points</th></tr></thead><tbody>' + historyData.my.map(taskRow).join('') + '</tbody></table>' :
+      '<div class="empty">No personal task history yet.</div>') +
+    '<h2>Shared Tasks</h2>' +
+    (historyData.shared.length ?
+      '<table><thead><tr><th>Task</th><th>Status</th><th>Date</th><th style="text-align:right">Points</th></tr></thead><tbody>' + historyData.shared.map(taskRow).join('') + '</tbody></table>' :
+      '<div class="empty">No shared task history yet.</div>') +
+    '</body></html>';
+
+  var newTab = window.open();
+  newTab.document.write(html);
+  newTab.document.close();
+
+  btn.textContent = 'View as PDF';
+  btn.disabled = false;
+}
+
 async function resetMumPin() {
   var newP = document.getElementById('mumNewPin').value;
   var confirm = document.getElementById('mumConfirmPin').value;
@@ -623,6 +734,7 @@ function openProfile() {
   document.getElementById('profileUserName').textContent = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
   document.getElementById('resetPinSection').style.display = CURRENT_USER === 'nyagah' ? 'block' : 'none';
   updateThemePill();
+  loadHistory();
   document.getElementById('profileModal').classList.add('show');
 }
 
