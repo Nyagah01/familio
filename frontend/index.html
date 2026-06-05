@@ -672,7 +672,8 @@ function downloadHistoryPDF() {
     setTimeout(function(){ btn.textContent = 'View as PDF'; }, 2000);
     return;
   }
-  window.location.href = API + '/pdf/' + MY_ID;
+  var myName = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
+  window.location.href = API + '/pdf/' + MY_ID + '?name=' + myName;
 }
 
 
@@ -977,8 +978,8 @@ function getTasksForUser(userId) { return tasks.filter(function(t){ return t.own
 function renderScores() {
   var myTasks = getTasksForUser(MY_ID);
   var theirTasks = getTasksForUser(THEIR_ID);
-  var myDone = myTasks.filter(function(t){return t.status==='done';});
-  var theirDone = theirTasks.filter(function(t){return t.status==='done';});
+  var myDone = myTasks.filter(function(t){return t.status==='done' || t.status==='archived';});
+  var theirDone = theirTasks.filter(function(t){return t.status==='done' || t.status==='archived';});
   // Use persistent scores if available, fall back to counting tasks
   var myScore = persistentScores[MY_ID];
   var theirScore = persistentScores[THEIR_ID];
@@ -995,7 +996,7 @@ function renderScores() {
   var theirStreakColor = getStreakColor(theirStreak || 0, theirActiveToday);
   document.getElementById('myPts').textContent=myPts;
   document.getElementById('myDone').textContent=myDone.length;
-  document.getElementById('myLeft').textContent=myTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
+  document.getElementById('myLeft').textContent=myTasks.filter(function(t){return t.status==='pending'||t.status==='in_progress';}).length;
   document.getElementById('myMeta').textContent=myTasks.length+' task'+(myTasks.length!==1?'s':'');
   if (myStreak !== null) {
     document.getElementById('myStreak').textContent = '🔥 ' + myStreak;
@@ -1007,7 +1008,7 @@ function renderScores() {
   }
   document.getElementById('theirPts').textContent=theirPts;
   document.getElementById('theirDone').textContent=theirDone.length;
-  document.getElementById('theirLeft').textContent=theirTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
+  document.getElementById('theirLeft').textContent=theirTasks.filter(function(t){return t.status==='pending'||t.status==='in_progress';}).length;
   document.getElementById('theirMeta').textContent=theirTasks.length+' task'+(theirTasks.length!==1?'s':'');
   var theirName2 = CURRENT_USER==='nyagah'?'Mum':'Nyagah'; var txt = myPts===0&&theirPts===0 ? 'No tasks done yet' : myPts===theirPts ? 'It is a tie!' : myPts>theirPts ? 'You are leading' : theirName2+' is leading';
   document.getElementById('leaderName').textContent = txt;
@@ -1016,9 +1017,9 @@ function renderScores() {
 function renderTabs() {
   var mySpace = CURRENT_USER === 'nyagah' ? 'nyagah' : 'mum';
   var theirSpace = CURRENT_USER === 'nyagah' ? 'mum' : 'nyagah';
-  document.getElementById('cnt-me').textContent = tasks.filter(function(t){return t.space===mySpace;}).length;
-  document.getElementById('cnt-shared').textContent = tasks.filter(function(t){return t.space==='shared';}).length;
-  document.getElementById('cnt-them').textContent = tasks.filter(function(t){return t.space===theirSpace;}).length;
+  document.getElementById('cnt-me').textContent = tasks.filter(function(t){return t.space===mySpace && t.status!=='archived';}).length;
+  document.getElementById('cnt-shared').textContent = tasks.filter(function(t){return t.space==='shared' && t.status!=='archived';}).length;
+  document.getElementById('cnt-them').textContent = tasks.filter(function(t){return t.space===theirSpace && t.status!=='archived';}).length;
 }
 
 function getSpaceFilter() {
@@ -1107,21 +1108,22 @@ async function markDone(id) {
   fireConfetti();
 }
 
-async function fetchScores() {
-  try {
-    var res = await fetch(API+'/scores');
-    var data = await res.json();
-    if (Array.isArray(data)) {
-      data.forEach(function(u) {
-        persistentScores[u.id] = {
-          pts: Math.max(0, (u.earned_points||0) - (u.deducted_points||0)),
-          streak: u.streak || 0,
-          lastDate: u.last_streak_date || null
-        };
-      });
-      renderScores();
-    }
-  } catch(e) { console.error('Scores fetch error:', e); }
+function fetchScores() {
+  return fetch(API+'/scores')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (Array.isArray(data)) {
+        data.forEach(function(u) {
+          persistentScores[u.id] = {
+            pts: Math.max(0, (u.earned_points||0) - (u.deducted_points||0)),
+            streak: u.streak || 0,
+            lastDate: u.last_streak_date || null
+          };
+        });
+        renderScores();
+      }
+    })
+    .catch(function(e){ console.error('Scores fetch error:', e); });
 }
 
 async function fetchVibes() {
@@ -1346,9 +1348,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setSpace('me');
     vibeLogs = [];
     renderVibesLog();
-    fetchTasks();
+    fetchScores().then(function(){ fetchTasks(); });
     fetchVibes();
-    fetchScores();
     setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); fetchScores(); } }, 30000);
   }
 });

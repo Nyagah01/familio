@@ -9,7 +9,7 @@ const MUM_ID = '00000000-0000-0000-0000-000000000002';
 router.get('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const userName = userId === NYAGAH_ID ? 'Nyagah' : 'Mum';
+    const userName = req.query.name || (userId === NYAGAH_ID ? 'Nyagah' : 'Mum');
 
     // Fetch history
     const { data: myTasks } = await supabase
@@ -31,7 +31,7 @@ router.get('/:userId', async (req, res) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="familio-history-' + userName.toLowerCase() + '.pdf"');
+    res.setHeader('Content-Disposition', 'attachment; filename="Familio-History-' + userName + '.pdf"');
     doc.pipe(res);
 
     // Header
