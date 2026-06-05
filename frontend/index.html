@@ -58,7 +58,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
 
 /* TASKS */
 .task-list{padding:8px 20px 16px;display:flex;flex-direction:column;gap:8px;}
-.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;transition:opacity 0.3s;}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding
+.task-card.priority-high{border-left:3px solid #E05A4A;}:14px 16px;transition:opacity 0.3s;}
 .task-card.done{opacity:0.5;}
 .task-card.celebrating{animation:celebrate 0.5s ease;}
 @keyframes celebrate{0%{transform:scale(1);}30%{transform:scale(1.03);}60%{transform:scale(0.98);}100%{transform:scale(1);}}
@@ -919,12 +920,21 @@ function renderTasks() {
   var spaceKey = getSpaceFilter();
   var visible = tasks.filter(function(t){ return t.space===spaceKey; });
   if (activeFilter !== 'all') visible = visible.filter(function(t){ return t.status===activeFilter; });
+  // Sort: high priority active tasks first, then medium, then low, then done/cancelled at bottom
+  var priorityOrder = {high:0, medium:1, low:2};
+  var statusOrder = {pending:0, in_progress:0, done:1, cancelled:1};
+  visible.sort(function(a,b){
+    var aBottom = a.status==='done'||a.status==='cancelled' ? 1 : 0;
+    var bBottom = b.status==='done'||b.status==='cancelled' ? 1 : 0;
+    if (aBottom !== bBottom) return aBottom - bBottom;
+    return (priorityOrder[a.priority]||1) - (priorityOrder[b.priority]||1);
+  });
   var list = document.getElementById('taskList');
   if (!visible.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon"><i class="ti ti-check"></i></div><div>Nothing here yet</div></div>'; return; }
   list.innerHTML = visible.map(function(task) {
     var isOwner = task.owner_id===MY_ID;
     var isPrivate = task.is_private && !isOwner;
-    var overdue = task.status!=='done' && new Date(task.due_date)<new Date();
+    var today = new Date(); today.setHours(0,0,0,0); var dueDate = new Date(task.due_date); dueDate.setHours(0,0,0,0); var overdue = task.status!=='done' && task.status!=='cancelled' && dueDate < today; var effectivePriority = overdue ? 'high' : task.priority;
     var isRes = researchingIds.indexOf(task.id)!==-1;
     var research = task.task_research && task.task_research.length>0 ? task.task_research[0] : null;
     var dueStr = task.due_date ? new Date(task.due_date).toLocaleDateString('en-KE',{month:'short',day:'numeric'}) : '';
@@ -967,7 +977,7 @@ function renderTasks() {
       '<div class="task-meta"><div class="task-left">'+
       '<div class="avatar '+aCls+'" style="width:22px;height:22px;font-size:10px">'+aLetter+'</div>'+
       '<span class="chip chip-'+task.status+'">'+sLabel+'</span>'+
-      (!isPrivate?'<span class="chip chip-'+task.priority+'">'+task.priority.charAt(0).toUpperCase()+task.priority.slice(1)+'</span>':'')+
+      (!isPrivate?'<span class="chip chip-'+effectivePriority+'">'+effectivePriority.charAt(0).toUpperCase()+effectivePriority.slice(1)+'</span>':'')+
       (isPrivate?'<span class="chip chip-private">Private</span>':'')+
       '</div><div class="task-right">'+
       (!isPrivate?(overdue && isOwner?'<span class="due-text overdue">Overdue</span><button onclick="rescheduleTask(\''+task.id+'\')" style="font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);border:1px solid rgba(200,135,58,0.3);border-radius:6px;padding:2px 7px;cursor:pointer;font-family:Inter,sans-serif;">Reschedule</button>':'<span class="due-text '+(overdue?'overdue':'')+'">'+( overdue?'Overdue':dueStr)+'</span>'):'')+

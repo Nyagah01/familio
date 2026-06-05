@@ -48,18 +48,26 @@ async function runDailyReminders() {
     }
 
     var days = daysUntil(task.due_date);
+    var isHigh = task.priority === 'high';
 
     usersToRemind.forEach(function(user) {
     var msg = null;
 
     if (days < 0) {
       msg = 'Hey ' + user.name + ', just a nudge from Familio 👋\n\n"' + task.title + '" was due ' + Math.abs(days) + ' day' + (Math.abs(days) !== 1 ? 's' : '') + ' ago and is still pending. Want to sort it out today?';
+      if (isHigh) msg += ' This is a HIGH PRIORITY task 🔴';
     } else if (days === 0) {
       msg = 'Hey ' + user.name + ' ⏰\n\n"' + task.title + '" is due TODAY. You got this — knock it out!';
+      if (isHigh) msg += ' 🔴 High priority!';
     } else if (days === 1) {
       msg = 'Hey ' + user.name + ', reminder from Familio 🗓️\n\n"' + task.title + '" is due tomorrow. Just a heads up!';
+      if (isHigh) msg += ' This one is high priority 🔴';
     } else if (days === 3) {
       msg = 'Hey ' + user.name + ', checking in from Familio 📋\n\n"' + task.title + '" is due in 3 days. Still on track?';
+    } else if (days === 7 && isHigh) {
+      msg = 'Hey ' + user.name + ' 🔴 High priority heads up from Familio!\n\n"' + task.title + '" is due in 7 days. Get a head start!';
+    } else if (days === 5 && isHigh) {
+      msg = 'Hey ' + user.name + ', Familio checking in 🔴\n\n"' + task.title + '" is a high priority task due in 5 days. How is it going?';
     }
 
     if (msg) {
