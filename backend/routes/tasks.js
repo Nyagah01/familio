@@ -77,16 +77,40 @@ router.patch('/:id/status', async (req, res) => {
   }
   if (due_date) updates.due_date = due_date;
 
-  // Track points independently when marking done
+  // Track points and streak when marking done
   if (status === 'done' && owner_id) {
     try {
       const { data: task } = await supabase.from('tasks').select('points, status').eq('id', req.params.id).single();
       if (task && task.status !== 'done') {
         const pts = task.points || 20;
-        const { data: user } = await supabase.from('users').select('earned_points').eq('id', owner_id).single();
-        await supabase.from('users').update({ earned_points: (user?.earned_points || 0) + pts }).eq('id', owner_id);
+        const { data: user } = await supabase.from('users').select('earned_points, streak, last_streak_date').eq('id', owner_id).single();
+        
+        // Update points
+        const newPoints = (user?.earned_points || 0) + pts;
+        
+        // Update streak
+        const today = new Date().toISOString().split('T')[0];
+        const lastDate = user?.last_streak_date;
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        
+        let newStreak = user?.streak || 0;
+        if (lastDate === today) {
+          // Already done something today, streak stays
+        } else if (lastDate === yesterday || !lastDate) {
+          // Consecutive day or first ever
+          newStreak = newStreak + 1;
+        } else {
+          // Missed days, reset
+          newStreak = 1;
+        }
+
+        await supabase.from('users').update({ 
+          earned_points: newPoints,
+          streak: newStreak,
+          last_streak_date: today
+        }).eq('id', owner_id);
       }
-    } catch(e) { console.error('Points tracking error:', e.message); }
+    } catch(e) { console.error('Points/streak tracking error:', e.message); }
   }
 
   const { data, error } = await supabase
@@ -202,6 +226,31 @@ router.patch('/:id/cancel', async (req, res) => {
     }
 
     res.json({ success: true, deducted: deduct });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST archive-done - move all done tasks to archived instead of deleting
+router.post('/archive-done', async (req, res) => {
+  const { owner_id } = req.body;
+  try {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: 'archived' })
+      .eq('owner_id', owner_id)
+      .eq('status', 'done')
+      .neq('space', 'shared');
+
+    // Also archive shared done tasks
+    const { error: sharedError } = await supabase
+      .from('tasks')
+      .update({ status: 'archived' })
+      .eq('space', 'shared')
+      .eq('status', 'done');
+
+    if (error) throw error;
+    res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }

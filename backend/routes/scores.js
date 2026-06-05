@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('id, earned_points, deducted_points')
+      .select('id, earned_points, deducted_points, streak, last_streak_date')
       .in('id', ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']);
     if (error) throw error;
     res.json(data);

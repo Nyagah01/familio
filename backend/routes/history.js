@@ -12,7 +12,7 @@ router.get('/:userId', async (req, res) => {
       .from('tasks')
       .select('*')
       .eq('owner_id', userId)
-      .in('status', ['done', 'cancelled'])
+      .in('status', ['done', 'cancelled', 'archived'])
       .neq('space', 'shared')
       .order('updated_at', { ascending: false });
 
@@ -23,7 +23,7 @@ router.get('/:userId', async (req, res) => {
       .from('tasks')
       .select('*')
       .eq('space', 'shared')
-      .in('status', ['done', 'cancelled'])
+      .in('status', ['done', 'cancelled', 'archived'])
       .order('updated_at', { ascending: false });
 
     if (sharedError) throw sharedError;

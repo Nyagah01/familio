@@ -212,7 +212,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
   </div>
   <div class="scores">
     <div class="score-card primary" id="myScoreCard">
-      <div class="score-card-top"><div class="avatar avatar-n" id="myAvatar">N</div><div><div class="score-name" id="myName">Me</div><div class="score-meta" id="myMeta">0 tasks</div></div></div>
+      <div class="score-card-top"><div class="avatar avatar-n" id="myAvatar">N</div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="score-name" id="myName">Me</div><div id="myStreak" style="font-size:11px;font-weight:600;color:#6B6864;">🔥 0</div></div><div class="score-meta" id="myMeta">0 tasks</div></div></div>
       <div class="score-nums">
         <div class="score-num"><div class="val" id="myPts">0</div><div class="lbl">pts</div></div>
         <div class="score-num"><div class="val" id="myDone">0</div><div class="lbl">done</div></div>
@@ -220,7 +220,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);max-wi
       </div>
     </div>
     <div class="score-card secondary" id="theirScoreCard">
-      <div class="score-card-top"><div class="avatar avatar-m" id="theirAvatar">M</div><div><div class="score-name" id="theirName">Them</div><div class="score-meta" id="theirMeta">0 tasks</div></div></div>
+      <div class="score-card-top"><div class="avatar avatar-m" id="theirAvatar">M</div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="score-name" id="theirName">Them</div><div id="theirStreak" style="font-size:11px;font-weight:600;color:#6B6864;">🔥 0</div></div><div class="score-meta" id="theirMeta">0 tasks</div></div></div>
       <div class="score-nums">
         <div class="score-num"><div class="val" id="theirPts">0</div><div class="lbl">pts</div></div>
         <div class="score-num"><div class="val" id="theirDone">0</div><div class="lbl">done</div></div>
@@ -997,6 +997,17 @@ function renderVibesLog() {
 function togglePrivate() { newPrivate = !newPrivate; document.getElementById('privatePill').classList.toggle('on', newPrivate); }
 
 // SCORES
+function getStreakColor(streak, activeToday) {
+  if (!activeToday) return '#6B6864'; // grey - inactive
+  if (streak >= 300) return '#E8E8FF'; // platinum
+  if (streak >= 200) return '#FFD700'; // gold
+  if (streak >= 100) return '#E05A4A'; // intense red
+  if (streak >= 50)  return '#9B59B6'; // purple
+  if (streak >= 30)  return '#4A7FC0'; // blue
+  if (streak >= 10)  return '#3D8B6B'; // green
+  return '#C8873A'; // amber default
+}
+
 function getTasksForUser(userId) { return tasks.filter(function(t){ return t.owner_id===userId || t.space==='shared'; }); }
 
 function renderScores() {
@@ -1005,12 +1016,27 @@ function renderScores() {
   var myDone = myTasks.filter(function(t){return t.status==='done';});
   var theirDone = theirTasks.filter(function(t){return t.status==='done';});
   // Use persistent scores if available, fall back to counting tasks
-  var myPts = persistentScores[MY_ID] !== undefined ? persistentScores[MY_ID] : Math.max(0, myDone.reduce(function(a,t){return a+(t.points||20);},0));
-  var theirPts = persistentScores[THEIR_ID] !== undefined ? persistentScores[THEIR_ID] : Math.max(0, theirDone.reduce(function(a,t){return a+(t.points||20);},0));
+  var myScore = persistentScores[MY_ID];
+  var theirScore = persistentScores[THEIR_ID];
+  var myPts = myScore ? myScore.pts : Math.max(0, myDone.reduce(function(a,t){return a+(t.points||20);},0));
+  var theirPts = theirScore ? theirScore.pts : Math.max(0, theirDone.reduce(function(a,t){return a+(t.points||20);},0));
+
+  // Streaks
+  var today = new Date().toISOString().split('T')[0];
+  var myStreak = myScore ? myScore.streak : 0;
+  var theirStreak = theirScore ? theirScore.streak : 0;
+  var myActiveToday = myScore && myScore.lastDate === today;
+  var theirActiveToday = theirScore && theirScore.lastDate === today;
+  var myStreakColor = getStreakColor(myStreak, myActiveToday);
+  var theirStreakColor = getStreakColor(theirStreak, theirActiveToday);
   document.getElementById('myPts').textContent=myPts;
   document.getElementById('myDone').textContent=myDone.length;
   document.getElementById('myLeft').textContent=myTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
   document.getElementById('myMeta').textContent=myTasks.length+' task'+(myTasks.length!==1?'s':'');
+  document.getElementById('myStreak').textContent = '🔥 ' + myStreak;
+  document.getElementById('myStreak').style.color = myStreakColor;
+  document.getElementById('theirStreak').textContent = '🔥 ' + theirStreak;
+  document.getElementById('theirStreak').style.color = theirStreakColor;
   document.getElementById('theirPts').textContent=theirPts;
   document.getElementById('theirDone').textContent=theirDone.length;
   document.getElementById('theirLeft').textContent=theirTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
@@ -1035,7 +1061,7 @@ function getSpaceFilter() {
 
 function renderTasks() {
   var spaceKey = getSpaceFilter();
-  var visible = tasks.filter(function(t){ return t.space===spaceKey; });
+  var visible = tasks.filter(function(t){ return t.space===spaceKey && t.status!=='archived'; });
   if (activeFilter !== 'all') visible = visible.filter(function(t){ return t.status===activeFilter; });
   // Sort: high priority active tasks first, then medium, then low, then done/cancelled at bottom
   var priorityOrder = {high:0, medium:1, low:2};
@@ -1118,7 +1144,11 @@ async function fetchScores() {
     var res = await fetch(API+'/scores');
     var data = await res.json();
     data.forEach(function(u) {
-      persistentScores[u.id] = Math.max(0, (u.earned_points||0) - (u.deducted_points||0));
+      persistentScores[u.id] = {
+        pts: Math.max(0, (u.earned_points||0) - (u.deducted_points||0)),
+        streak: u.streak || 0,
+        lastDate: u.last_streak_date || null
+      };
     });
     renderScores();
   } catch(e) { console.error('Scores fetch error:', e); }
@@ -1304,12 +1334,16 @@ async function sendReminders() {
 }
 
 async function clearCompleted() {
-  var doneTasks = tasks.filter(function(t){ return t.status==='done' && t.owner_id===MY_ID; });
+  var doneTasks = tasks.filter(function(t){ return t.status==='done'; });
   if (!doneTasks.length) return;
-  for (var i=0;i<doneTasks.length;i++) {
-    try { await fetch(API+'/tasks/'+doneTasks[i].id,{method:'DELETE'}); } catch(e){}
-  }
-  await fetchTasks();
+  try {
+    await fetch(API+'/tasks/archive-done', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ owner_id: MY_ID })
+    });
+    await fetchTasks();
+  } catch(e) { console.error(e); }
 }
 
 async function addTask() {
