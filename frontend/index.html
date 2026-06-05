@@ -613,11 +613,14 @@ var persistentScores = {};
 var activeHistoryTab = 'my';
 
 async function loadHistory() {
+  document.getElementById('historyList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Loading...</div>';
   try {
     var res = await fetch(API+'/history/'+MY_ID);
-    historyData = await res.json();
+    var data = await res.json();
+    historyData = { my: data.my || [], shared: data.shared || [] };
     renderHistoryList();
   } catch(e) {
+    console.error('History error:', e);
     document.getElementById('historyList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Could not load history</div>';
   }
 }
@@ -1143,14 +1146,16 @@ async function fetchScores() {
   try {
     var res = await fetch(API+'/scores');
     var data = await res.json();
-    data.forEach(function(u) {
-      persistentScores[u.id] = {
-        pts: Math.max(0, (u.earned_points||0) - (u.deducted_points||0)),
-        streak: u.streak || 0,
-        lastDate: u.last_streak_date || null
-      };
-    });
-    renderScores();
+    if (Array.isArray(data)) {
+      data.forEach(function(u) {
+        persistentScores[u.id] = {
+          pts: Math.max(0, (u.earned_points||0) - (u.deducted_points||0)),
+          streak: u.streak || 0,
+          lastDate: u.last_streak_date || null
+        };
+      });
+      renderScores();
+    }
   } catch(e) { console.error('Scores fetch error:', e); }
 }
 
