@@ -673,7 +673,7 @@ function downloadHistoryPDF() {
     return;
   }
   var myName = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
-  window.location.href = API + '/pdf/' + MY_ID + '?name=' + myName;
+  window.location.href = API + '/pdf/' + MY_ID + '/' + myName;
 }
 
 
