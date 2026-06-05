@@ -663,6 +663,13 @@ function renderHistoryList() {
 
 function downloadHistoryPDF() {
   var btn = document.getElementById('pdfBtn');
+
+  if (!historyData.my.length && !historyData.shared.length) {
+    btn.textContent = 'No history yet!';
+    setTimeout(function(){ btn.textContent = 'View as PDF'; }, 2000);
+    return;
+  }
+
   btn.textContent = 'Generating...';
   btn.disabled = true;
 
