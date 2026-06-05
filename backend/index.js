@@ -10,6 +10,7 @@ const { router: remindersRouter, runDailyReminders } = require('./routes/reminde
 const pinsRouter = require('./routes/pins');
 const historyRouter = require('./routes/history');
 const scoresRouter = require('./routes/scores');
+const pdfRouter = require('./routes/pdf');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/reminders', remindersRouter);
 app.use('/pins', pinsRouter);
 app.use('/history', historyRouter);
 app.use('/scores', scoresRouter);
+app.use('/pdf', pdfRouter);
 
 // Reset streaks at midnight Nairobi time (21:00 UTC previous day)
 cron.schedule('0 21 * * *', async () => {

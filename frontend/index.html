@@ -666,62 +666,15 @@ function renderHistoryList() {
 }
 
 function downloadHistoryPDF() {
-  var btn = document.getElementById('pdfBtn');
-
   if (!historyData.my.length && !historyData.shared.length) {
+    var btn = document.getElementById('pdfBtn');
     btn.textContent = 'No history yet!';
     setTimeout(function(){ btn.textContent = 'View as PDF'; }, 2000);
     return;
   }
-
-  btn.textContent = 'Generating...';
-  btn.disabled = true;
-
-  var myName = CURRENT_USER === 'nyagah' ? 'Nyagah' : 'Mum';
-  var date = new Date().toLocaleDateString('en-KE',{month:'long',day:'numeric',year:'numeric'});
-
-  function taskRow(t) {
-    var dateStr = t.completed_at || t.updated_at;
-    var d = dateStr ? new Date(dateStr).toLocaleDateString('en-KE',{month:'short',day:'numeric',year:'numeric'}) : '';
-    var pts = t.status==='done' ? '+' + (t.points||20) : '-' + (t.points_deducted||0);
-    var isDoneOrArchived = t.status==='done' || t.status==='archived';
-    var color = isDoneOrArchived ? '#2D6A4F' : '#C0392B';
-    var statusLabel = isDoneOrArchived ? 'Done' : 'Cancelled';
-    return '<tr style="border-bottom:1px solid #eee;">' +
-      '<td style="padding:10px 8px;font-size:13px;color:#1a1209;">' + t.title + (t.cancel_reason ? '<br><span style="font-size:11px;color:#C0392B;font-style:italic;">Reason: ' + t.cancel_reason + '</span>' : '') + '</td>' +
-      '<td style="padding:10px 8px;font-size:12px;color:' + color + ';font-weight:600;">' + statusLabel + '</td>' +
-      '<td style="padding:10px 8px;font-size:12px;color:#666;">' + d + '</td>' +
-      '<td style="padding:10px 8px;font-size:12px;font-weight:700;color:' + color + ';text-align:right;">' + pts + ' pts</td>' +
-      '</tr>';
-  }
-
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-    '<style>body{font-family:Georgia,serif;margin:40px;color:#1a1209;} h1{font-size:28px;color:#C8873A;margin:0;} h2{font-size:16px;color:#333;margin:24px 0 10px;border-bottom:2px solid #C8873A;padding-bottom:6px;} table{width:100%;border-collapse:collapse;} th{text-align:left;padding:10px 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#666;border-bottom:2px solid #eee;} .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;} .meta{font-size:13px;color:#666;margin-top:4px;} .empty{color:#999;font-size:13px;font-style:italic;padding:12px 0;}</style>' +
-    '</head><body>' +
-    '<div class="header"><div><h1>Familio</h1><div class="meta">Task History for ' + myName + '</div><div class="meta">Generated ' + date + '</div></div></div>' +
-    '<h2>My Tasks</h2>' +
-    (historyData.my.length ?
-      '<table><thead><tr><th>Task</th><th>Status</th><th>Date</th><th style="text-align:right">Points</th></tr></thead><tbody>' + historyData.my.map(taskRow).join('') + '</tbody></table>' :
-      '<div class="empty">No personal task history yet.</div>') +
-    '<h2>Shared Tasks</h2>' +
-    (historyData.shared.length ?
-      '<table><thead><tr><th>Task</th><th>Status</th><th>Date</th><th style="text-align:right">Points</th></tr></thead><tbody>' + historyData.shared.map(taskRow).join('') + '</tbody></table>' :
-      '<div class="empty">No shared task history yet.</div>') +
-    '</body></html>';
-
-  // Use data URL - works on iOS without popup blocker issues
-  var encoded = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
-  var a = document.createElement('a');
-  a.href = encoded;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  btn.textContent = 'View as PDF';
-  btn.disabled = false;
+  window.location.href = API + '/pdf/' + MY_ID;
 }
+
 
 async function resetMumPin() {
   var newP = document.getElementById('mumNewPin').value;
