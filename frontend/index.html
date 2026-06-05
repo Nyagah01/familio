@@ -1108,7 +1108,7 @@ async function markDone(id) {
 
 async function fetchScores() {
   try {
-    var res = await fetch(API+'/tasks/scores');
+    var res = await fetch(API+'/scores');
     var data = await res.json();
     data.forEach(function(u) {
       persistentScores[u.id] = Math.max(0, (u.earned_points||0) - (u.deducted_points||0));

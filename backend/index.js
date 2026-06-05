@@ -9,6 +9,7 @@ const vibesRouter = require('./routes/vibes');
 const { router: remindersRouter, runDailyReminders } = require('./routes/reminders');
 const pinsRouter = require('./routes/pins');
 const historyRouter = require('./routes/history');
+const scoresRouter = require('./routes/scores');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/vibes', vibesRouter);
 app.use('/reminders', remindersRouter);
 app.use('/pins', pinsRouter);
 app.use('/history', historyRouter);
+app.use('/scores', scoresRouter);
 
 // Run reminders every day at 8:00 AM Nairobi time (UTC+3 = 05:00 UTC)
 cron.schedule('0 5 * * *', async () => {
