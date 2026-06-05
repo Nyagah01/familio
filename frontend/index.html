@@ -646,10 +646,11 @@ function renderHistoryList() {
   list.innerHTML = items.map(function(t) {
     var dateStr = t.completed_at || t.updated_at;
     var date = dateStr ? new Date(dateStr).toLocaleDateString('en-KE',{month:'short',day:'numeric',year:'numeric'}) : '';
-    var statusColor = t.status==='done' ? 'var(--green)' : '#E05A4A';
-    var statusLabel = t.status==='done' ? 'Done' : 'Cancelled';
-    var pts = t.status==='done' ? '+' + (t.points||20) + ' pts' : '-' + (t.points_deducted||0) + ' pts';
-    var ptsColor = t.status==='done' ? 'var(--accent)' : '#E05A4A';
+    var isDoneOrArchived = t.status==='done' || t.status==='archived';
+    var statusColor = isDoneOrArchived ? 'var(--green)' : '#E05A4A';
+    var statusLabel = isDoneOrArchived ? 'Done' : 'Cancelled';
+    var pts = isDoneOrArchived ? '+' + (t.points||20) + ' pts' : '-' + (t.points_deducted||0) + ' pts';
+    var ptsColor = isDoneOrArchived ? 'var(--accent)' : '#E05A4A';
     return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">' +
       '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:600;color:var(--ink);flex:1;margin-right:8px;">' + t.title + '</div>' +
@@ -683,8 +684,9 @@ function downloadHistoryPDF() {
     var dateStr = t.completed_at || t.updated_at;
     var d = dateStr ? new Date(dateStr).toLocaleDateString('en-KE',{month:'short',day:'numeric',year:'numeric'}) : '';
     var pts = t.status==='done' ? '+' + (t.points||20) : '-' + (t.points_deducted||0);
-    var color = t.status==='done' ? '#2D6A4F' : '#C0392B';
-    var statusLabel = t.status==='done' ? 'Done' : 'Cancelled';
+    var isDoneOrArchived = t.status==='done' || t.status==='archived';
+    var color = isDoneOrArchived ? '#2D6A4F' : '#C0392B';
+    var statusLabel = isDoneOrArchived ? 'Done' : 'Cancelled';
     return '<tr style="border-bottom:1px solid #eee;">' +
       '<td style="padding:10px 8px;font-size:13px;color:#1a1209;">' + t.title + (t.cancel_reason ? '<br><span style="font-size:11px;color:#C0392B;font-style:italic;">Reason: ' + t.cancel_reason + '</span>' : '') + '</td>' +
       '<td style="padding:10px 8px;font-size:12px;color:' + color + ';font-weight:600;">' + statusLabel + '</td>' +
@@ -707,9 +709,15 @@ function downloadHistoryPDF() {
       '<div class="empty">No shared task history yet.</div>') +
     '</body></html>';
 
-  var newTab = window.open();
-  newTab.document.write(html);
-  newTab.document.close();
+  // Use data URL - works on iOS without popup blocker issues
+  var encoded = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+  var a = document.createElement('a');
+  a.href = encoded;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 
   btn.textContent = 'View as PDF';
   btn.disabled = false;
@@ -1026,20 +1034,24 @@ function renderScores() {
 
   // Streaks
   var today = new Date().toISOString().split('T')[0];
-  var myStreak = myScore ? myScore.streak : 0;
-  var theirStreak = theirScore ? theirScore.streak : 0;
+  var myStreak = myScore ? myScore.streak : null;
+  var theirStreak = theirScore ? theirScore.streak : null;
   var myActiveToday = myScore && myScore.lastDate === today;
   var theirActiveToday = theirScore && theirScore.lastDate === today;
-  var myStreakColor = getStreakColor(myStreak, myActiveToday);
-  var theirStreakColor = getStreakColor(theirStreak, theirActiveToday);
+  var myStreakColor = getStreakColor(myStreak || 0, myActiveToday);
+  var theirStreakColor = getStreakColor(theirStreak || 0, theirActiveToday);
   document.getElementById('myPts').textContent=myPts;
   document.getElementById('myDone').textContent=myDone.length;
   document.getElementById('myLeft').textContent=myTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
   document.getElementById('myMeta').textContent=myTasks.length+' task'+(myTasks.length!==1?'s':'');
-  document.getElementById('myStreak').textContent = '🔥 ' + myStreak;
-  document.getElementById('myStreak').style.color = myStreakColor;
-  document.getElementById('theirStreak').textContent = '🔥 ' + theirStreak;
-  document.getElementById('theirStreak').style.color = theirStreakColor;
+  if (myStreak !== null) {
+    document.getElementById('myStreak').textContent = '🔥 ' + myStreak;
+    document.getElementById('myStreak').style.color = myStreakColor;
+  }
+  if (theirStreak !== null) {
+    document.getElementById('theirStreak').textContent = '🔥 ' + theirStreak;
+    document.getElementById('theirStreak').style.color = theirStreakColor;
+  }
   document.getElementById('theirPts').textContent=theirPts;
   document.getElementById('theirDone').textContent=theirDone.length;
   document.getElementById('theirLeft').textContent=theirTasks.filter(function(t){return t.status!=='done'&&t.status!=='cancelled';}).length;
