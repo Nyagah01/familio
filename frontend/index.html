@@ -770,9 +770,9 @@ function checkPin() {
       setSpace('me');
       vibeLogs = [];
       renderVibesLog();
-      fetchTasks();
+      fetchScores().then(function(){ fetchTasks(); });
       fetchVibes();
-      setInterval(function(){ if (CURRENT_USER) { fetchTasks(); fetchVibes(); fetchScores(); } }, 30000);
+      setInterval(function(){ if (CURRENT_USER) { fetchScores(); fetchTasks(); fetchVibes(); } }, 30000);
     } else {
       document.getElementById('loginError').textContent = 'Wrong PIN, try again';
       pinBuffer = '';
