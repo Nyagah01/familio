@@ -181,21 +181,14 @@ router.patch('/:id/cancel', async (req, res) => {
 
     if (taskError || !task) throw new Error('Task not found');
 
-    // Get canceller current points
-    const allTasks = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('owner_id', cancelled_by)
-      .eq('status', 'done');
+    // Get canceller current points from users table
+    const { data: userData } = await supabase
+      .from('users')
+      .select('earned_points, deducted_points')
+      .eq('id', cancelled_by)
+      .single();
 
-    const sharedDone = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('space', 'shared')
-      .eq('status', 'done');
-
-    const myPoints = (allTasks.data || []).reduce((a, t) => a + (t.points || 20), 0) +
-                     (sharedDone.data || []).reduce((a, t) => a + (t.points || 20), 0);
+    const myPoints = Math.max(0, (userData?.earned_points || 0) - (userData?.deducted_points || 0));
 
     // Deduct 5 points only for personal tasks, not shared
     const isShared = task.space === 'shared';
