@@ -1081,11 +1081,11 @@ function renderTasks() {
 
     return '<div class="task-card '+(isDone?'done':'')+'" id="tc-'+task.id+'">'+
       '<div class="task-top"><div style="flex:1"><div class="task-title '+(isDone?'strikethrough':'')+' '+(isPrivate?'blurred':'')+'">'+( isPrivate?'Private task':task.title)+'</div></div>'+
-      ((!isPrivate && isOwner)?'<button class="delete-btn" onclick="openEdit(\''+task.id+'\')"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="delete-btn" onclick="openCancel(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
+      ((!isPrivate && isOwner && task.status!=='cancelled')?'<button class="delete-btn" onclick="openEdit(\''+task.id+'\')"><i class="ti ti-pencil" style="font-size:13px"></i></button><button class="delete-btn" onclick="openCancel(\''+task.id+'\')"><i class="ti ti-x"></i></button>':'')+
       '</div>'+
       (task.description&&!isPrivate?'<div class="task-desc">'+task.description+'</div>':'')+
       (isPrivate?'<div class="task-desc blurred">Working on something personal</div>':'')+
-      (task.status==='cancelled'&&task.cancel_reason?'<div class="cancel-reason">Cancelled: '+task.cancel_reason+'</div>':'')+
+      (task.status==='cancelled'?'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'+(task.cancel_reason?'<div class="cancel-reason">Cancelled: '+task.cancel_reason+'</div>':'<div class="cancel-reason">Cancelled</div>')+(isOwner?'<button onclick="restoreTask(\''+task.id+'\')" style="font-size:10px;font-weight:600;color:var(--ink3);background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Inter,sans-serif;">Restore</button>':'')+'</div>':'')+
       '<div class="task-meta"><div class="task-left">'+
       '<div class="avatar '+aCls+'" style="width:22px;height:22px;font-size:10px">'+aLetter+'</div>'+
       '<span class="chip chip-'+task.status+'">'+sLabel+'</span>'+
@@ -1169,6 +1169,17 @@ async function changeStatus(id, status) {
   await fetchTasks();
 }
 
+async function restoreTask(id) {
+  try {
+    await fetch(API+'/tasks/'+id+'/status', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({status: 'pending', owner_id: MY_ID})
+    });
+    await fetchTasks();
+  } catch(e) { console.error(e); }
+}
+
 var editingTaskId = null;
 
 function openEdit(id) {
@@ -1242,6 +1253,9 @@ function openCancel(id) {
 }
 
 function confirmCancel() {
+  var btn = document.getElementById('cancelConfirmBtn');
+  btn.textContent = 'Cancelling...';
+  btn.disabled = true;
   var reason = document.getElementById('cancelReason').value.trim();
   fetch(API+'/tasks/'+cancellingTaskId+'/cancel', {
     method: 'PATCH',
@@ -1257,9 +1271,16 @@ function confirmCancel() {
     } else if (data.success) {
       document.getElementById('cancelModal').classList.remove('show');
       fetchTasks();
+      fetchScores();
     }
+    btn.textContent = 'Cancel task (-5 pts)';
+    btn.disabled = false;
   })
-  .catch(function(e){ console.error(e); });
+  .catch(function(e){
+    console.error(e);
+    btn.textContent = 'Cancel task (-5 pts)';
+    btn.disabled = false;
+  });
 }
 
 var reschedulingTaskId = null;
